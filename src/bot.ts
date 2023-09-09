@@ -139,4 +139,5 @@ bot.on('message', async (ctx) => {
 
 
 // Start the bot
+console.log('Starting bot...');
 bot.start();
