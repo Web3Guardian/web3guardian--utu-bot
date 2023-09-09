@@ -1,7 +1,8 @@
-import { Bot, Api, Context, SessionFlavor } from 'grammy';
+import { Bot, Context, session, SessionFlavor } from 'grammy';
 
 // Define the states of the bot
 enum State {
+    IDLE,
     AWAITING_PRIVATE_KEY,
     AWAITING_USERNAME,
     AWAITING_ACTION,
@@ -20,9 +21,19 @@ interface SessionData {
 // Declare `ctx.session` to be of type `SessionData`.
 type MyContext = Context & SessionFlavor<SessionData>;
 
-// Create a bot and an API instance
+// Create a bot
 const bot = new Bot<MyContext>(process.env.BOT_TOKEN!);
-const api = new Api(process.env.BOT_TOKEN!);
+
+// Install session middleware, and define the initial session value.
+function initial(): SessionData {
+    return {
+        state: State.IDLE,
+        otherUsername: '',
+        feedback: '',
+        rating: 0,
+    };
+}
+bot.use(session({ initial }));
 
 // Middleware to intercept /start command
 bot.use(async (ctx) => {
@@ -76,12 +87,11 @@ bot.on('message', async (ctx) => {
             }
 
             await ctx.reply('Enter another user\'s username:');
-            // clear the session
-            ctx.session.otherUsername = '';
-            ctx.session.feedback = '';
-            ctx.session.rating = 0;
 
-            // Reset the state
+            // clear the session
+            ctx.session = initial();
+
+            // Get the bot to prompt another username
             ctx.session.state = State.AWAITING_USERNAME;
         }
         else if (action === 'Submit Review on User') {
@@ -127,16 +137,20 @@ bot.on('message', async (ctx) => {
             await ctx.reply('Feedback submission cancelled.');
         }
         await ctx.reply('Enter another user\'s username:');
+            
         // clear the session
-        ctx.session.otherUsername = '';
-        ctx.session.feedback = '';
-        ctx.session.rating = 0;
+        ctx.session = initial();
 
-        // Reset the state
+        // Get the bot to prompt another username
         ctx.session.state = State.AWAITING_USERNAME;
     }
 });
 
+// Handle errors
+bot.catch((err) => {
+    console.error('An error occurred:', err);
+    // TODO: Send error message to user
+});
 
 // Start the bot
 console.log('Starting bot...');
