@@ -35,17 +35,16 @@ function initial(): SessionData {
 }
 bot.use(session({ initial }));
 
-// Middleware to intercept /start command
-bot.use(async (ctx) => {
-    if (ctx.message?.text === '/start') {
-        await ctx.reply('Web3 Guardian 🤖:\n\nA telegram bot that leverages the UTU Web3 Protocol to provide reliable reputation checks for telegram users 🧐');
-        await ctx.reply('Please enter your wallet\'s private key:');   // TODO: Should we generate our bot's responses with a language model to make them more expressive and different each time? 🤔
-        ctx.session.state = State.AWAITING_PRIVATE_KEY;
-    }
+// /start command
+bot.command("start", async (ctx) => {
+    await ctx.reply('<h1>Web3 Guardian 🤖</h1>\n\nA telegram bot that leverages the UTU Web3 Protocol to provide reliable reputation checks for telegram users 🧐', {parse_mode: 'HTML'});
+    await ctx.reply('Please enter your wallet\'s private key:');   // TODO: Should we generate our bot's responses with a language model to make them more expressive and different each time? 🤔
+    ctx.session.state = State.AWAITING_PRIVATE_KEY;
 });
 
 // Middleware to handle user inputs
-bot.on('message', async (ctx) => {
+bot.on('message:text', async (ctx) => {
+    console.log('Received message:', ctx.message.text);
     if (ctx.session.state === State.AWAITING_PRIVATE_KEY) {
         const privateKey = ctx.message.text;
         const myUsername = ctx.from?.username;
