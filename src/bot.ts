@@ -38,7 +38,7 @@ bot.use(session({ initial }));
 // Middleware to intercept /start command
 bot.use(async (ctx) => {
     if (ctx.message?.text === '/start') {
-        await ctx.reply('<h1>Web3 Guardian 🤖</h1>\n\nA telegram bot that leverages the UTU Web3 Protocol to provide reliable reputation checks for telegram users 🧐');
+        await ctx.reply('<b>Web3 Guardian 🤖</b>\n\nA telegram bot that leverages the UTU Web3 Protocol to provide reliable reputation checks for telegram users 🧐');
         await ctx.reply('Please enter your wallet\'s private key:');   // TODO: Should we generate our bot's responses with a language model to make them more expressive and different each time? 🤔
         ctx.session.state = State.AWAITING_PRIVATE_KEY;
     }
