@@ -1,4 +1,4 @@
-import { Bot, Context, session, SessionFlavor } from 'grammy';
+import { Bot, Context, InlineKeyboard, session, SessionFlavor } from 'grammy';
 
 // Define the states of the bot
 enum State {
@@ -37,14 +37,22 @@ bot.use(session({ initial }));
 
 // /start command
 bot.command("start", async (ctx) => {
-    await ctx.reply('<h1>Web3 Guardian 🤖</h1>\n\nA telegram bot that leverages the UTU Web3 Protocol to provide reliable reputation checks for telegram users 🧐', {parse_mode: 'HTML'});
-    await ctx.reply('Please enter your wallet\'s private key:');   // TODO: Should we generate our bot's responses with a language model to make them more expressive and different each time? 🤔
+    await ctx.reply('<b>Web3 Guardian 🤖</b>\n\nA telegram bot that leverages the UTU Web3 Protocol to provide reliable reputation checks for telegram users 🧐', {parse_mode: 'HTML'});
+    await ctx.reply('Please enter your wallet\'s private key 🔐:');   // TODO: Should we generate our bot's responses with a language model to make them more expressive and different each time? 🤔
     ctx.session.state = State.AWAITING_PRIVATE_KEY;
+});
+
+// /restart command
+bot.command("restart", async (ctx) => {
+    if (ctx.session.state !== State.AWAITING_PRIVATE_KEY) {
+        ctx.session = initial();
+        ctx.session.state = State.AWAITING_USERNAME;
+        await ctx.reply('Enter a user\'s username 👤:');
+    }
 });
 
 // Middleware to handle user inputs
 bot.on('message:text', async (ctx) => {
-    console.log('Received message:', ctx.message.text);
     if (ctx.session.state === State.AWAITING_PRIVATE_KEY) {
         const privateKey = ctx.message.text;
         const myUsername = ctx.from?.username;
@@ -52,21 +60,20 @@ bot.on('message:text', async (ctx) => {
         // TODO: Store the JWT in Redis with the hash as the user's username and the key as 'accessToken'
         // TODO: Store the refresh token (if any) in Redis with the hash as the user's username and the key as 'refreshToken'
         // Now, ask the user to enter a user's username
-        await ctx.reply('Enter a user\'s username:');
+        await ctx.reply('Enter a user\'s username 👤:');
         ctx.session.state = State.AWAITING_USERNAME;
     }
     else if (ctx.session.state === State.AWAITING_USERNAME) {
         ctx.session.otherUsername = ctx.message.text!;
         // TODO: check if this username exists in telegram and if not, prompt the user to reenter username
-        const keyboard = [['View User\'s Reputation', 'Submit Review on User']];
         await ctx.reply('What would you like to do?', {
-            reply_markup: { keyboard, one_time_keyboard: true },
+            reply_markup: new InlineKeyboard().text('View User\'s Reputation 👀', 'View User Reputation').row().text('Submit Review on User 📝', 'Submit Review'),
         });
         ctx.session.state = State.AWAITING_ACTION;
     }
     else if (ctx.session.state === State.AWAITING_ACTION) {
         const action = ctx.message.text;
-        if (action === 'View User\'s Reputation') {
+        if (action === 'View User Reputation') {
             // TODO: Fetch feedback on entity (otherUsername) from UTU API
 
             const reviews = [
@@ -85,17 +92,16 @@ bot.on('message:text', async (ctx) => {
                 await ctx.reply('No reviews found for @' + ctx.session.otherUsername);
             }
 
-            await ctx.reply('Enter another user\'s username:');
-
-            // clear the session
-            ctx.session = initial();
-
-            // Get the bot to prompt another username
-            ctx.session.state = State.AWAITING_USERNAME;
+            await ctx.reply('Thanks for using Web3 Guardian! 😊\n\nEnter /restart to try another user.');
+            ctx.session.state = State.IDLE;
         }
-        else if (action === 'Submit Review on User') {
+        else if (action === 'Submit Review') {
             await ctx.reply('Tell us your objective feedback on @' + ctx.session.otherUsername + ':');
             ctx.session.state = State.AWAITING_FEEDBACK;
+        }
+        else {
+            await ctx.reply('Invalid input. Please enter View User Reputation or Submit Review');
+            return;
         }
     }
     else if (ctx.session.state === State.AWAITING_FEEDBACK) {
@@ -103,25 +109,22 @@ bot.on('message:text', async (ctx) => {
         await ctx.reply('How would you rate your experience with @' + ctx.session.otherUsername + '?');
 
         // Create a menu with star emojis for rating
-        const keyboard = [
-            ['⭐', '⭐⭐', '⭐⭐⭐'],
-            ['⭐⭐⭐⭐', '⭐⭐⭐⭐⭐']
-        ];
-
         await ctx.reply('Choose a rating:', {
-            reply_markup: { keyboard, one_time_keyboard: true },
+            reply_markup: new InlineKeyboard().text('⭐', '1').text('⭐⭐', '2').text('⭐⭐⭐', '3').row().text('⭐⭐⭐⭐', '4').text('⭐⭐⭐⭐⭐', '5'),
         });
         ctx.session.state = State.AWAITING_RATING;
     }
     else if (ctx.session.state === State.AWAITING_RATING) {
-        ctx.session.rating = ctx.message.text!.length;    // Convert the star emoji into a rating value
-        await ctx.reply('Are you sure you want to submit the following feedback?');
+        ctx.session.rating = ctx.message.text as unknown as number;    // Convert the star emoji into a rating value
+        if (ctx.session.rating < 1 || ctx.session.rating > 5) {
+            await ctx.reply('Invalid input. Please enter a number between 1 and 5');
+            return;
+        }
         await ctx.reply('Feedback: ' + ctx.session.feedback);
         await ctx.reply('Rating: ' + ctx.session.rating);
         // Create a menu with yes/no options
-        const keyboard = [['Yes', 'No']];
-        await ctx.reply('Choose an option:', {
-            reply_markup: { keyboard, one_time_keyboard: true },
+        await ctx.reply('Are you sure you want to submit the following feedback? (Yes/No)', {
+            reply_markup: new InlineKeyboard().text('Yes', 'Yes').text('No', 'No'),
         });
         ctx.session.state = State.AWAITING_FEEDBACK_CONFIRMATION;
     }
@@ -135,13 +138,13 @@ bot.on('message:text', async (ctx) => {
         else if (confirmation === 'No') {
             await ctx.reply('Feedback submission cancelled.');
         }
-        await ctx.reply('Enter another user\'s username:');
-            
-        // clear the session
-        ctx.session = initial();
+        else {
+            await ctx.reply('Invalid input. Please enter Yes or No');
+            return;
+        }
 
-        // Get the bot to prompt another username
-        ctx.session.state = State.AWAITING_USERNAME;
+        await ctx.reply('Thanks for using Web3 Guardian! 😊\n\nEnter /restart to try another user.');
+        ctx.session.state = State.IDLE;
     }
 });
 
