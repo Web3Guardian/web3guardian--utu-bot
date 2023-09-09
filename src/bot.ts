@@ -37,8 +37,10 @@ bot.use(session({ initial }));
 
 // /start command
 bot.command("start", async (ctx) => {
-    await ctx.reply('<b>Web3 Guardian 🤖</b>\n\nA telegram bot that leverages the UTU Web3 Protocol to provide reliable reputation checks for telegram users 🧐', {parse_mode: 'HTML'});
-    await ctx.reply('Please enter your wallet\'s private key 🔐:');   // TODO: Should we generate our bot's responses with a language model to make them more expressive and different each time? 🤔
+    // TODO: Should we generate our bot's responses with a language model to make them more expressive and different each time? 🤔
+    await ctx.reply('<b>Web3 Guardian 🤖</b>\n\nA telegram bot that leverages the UTU Web3 Protocol to provide reliable reputation checks on telegram users 🧐', {parse_mode: 'HTML'});
+    // TODO: Include instructions on how to obtain a private key from a wallet such as Metamask in the message below
+    await ctx.reply('Please enter your wallet\'s private key 🔐:');   
     ctx.session.state = State.AWAITING_PRIVATE_KEY;
 });
 
@@ -52,9 +54,9 @@ bot.command("restart", async (ctx) => {
 });
 
 // Middleware to handle user inputs
-bot.on('message:text', async (ctx) => {
+bot.on(['message:text', 'callback_query:data'], async (ctx) => {
     if (ctx.session.state === State.AWAITING_PRIVATE_KEY) {
-        const privateKey = ctx.message.text;
+        const privateKey = ctx.message?.text || ctx.callbackQuery?.data;
         const myUsername = ctx.from?.username;
         // TODO: Obtain JWT from UTU API using the private key
         // TODO: Store the JWT in Redis with the hash as the user's username and the key as 'accessToken'
@@ -64,15 +66,15 @@ bot.on('message:text', async (ctx) => {
         ctx.session.state = State.AWAITING_USERNAME;
     }
     else if (ctx.session.state === State.AWAITING_USERNAME) {
-        ctx.session.otherUsername = ctx.message.text!;
+        ctx.session.otherUsername = ctx.message?.text! || ctx.callbackQuery?.data!;
         // TODO: check if this username exists in telegram and if not, prompt the user to reenter username
+        ctx.session.state = State.AWAITING_ACTION;
         await ctx.reply('What would you like to do?', {
             reply_markup: new InlineKeyboard().text('View User\'s Reputation 👀', 'View User Reputation').row().text('Submit Review on User 📝', 'Submit Review'),
         });
-        ctx.session.state = State.AWAITING_ACTION;
     }
     else if (ctx.session.state === State.AWAITING_ACTION) {
-        const action = ctx.message.text;
+        const action = ctx.message?.text || ctx.callbackQuery?.data;
         if (action === 'View User Reputation') {
             // TODO: Fetch feedback on entity (otherUsername) from UTU API
 
@@ -105,31 +107,32 @@ bot.on('message:text', async (ctx) => {
         }
     }
     else if (ctx.session.state === State.AWAITING_FEEDBACK) {
-        ctx.session.feedback = ctx.message.text!;
+        ctx.session.feedback = ctx.message?.text! || ctx.callbackQuery?.data!;
         await ctx.reply('How would you rate your experience with @' + ctx.session.otherUsername + '?');
+        ctx.session.state = State.AWAITING_RATING;
 
         // Create a menu with star emojis for rating
         await ctx.reply('Choose a rating:', {
             reply_markup: new InlineKeyboard().text('⭐', '1').text('⭐⭐', '2').text('⭐⭐⭐', '3').row().text('⭐⭐⭐⭐', '4').text('⭐⭐⭐⭐⭐', '5'),
         });
-        ctx.session.state = State.AWAITING_RATING;
     }
     else if (ctx.session.state === State.AWAITING_RATING) {
-        ctx.session.rating = ctx.message.text as unknown as number;    // Convert the star emoji into a rating value
+        ctx.session.rating = (ctx.message?.text || ctx.callbackQuery?.data) as unknown as number;    // Convert the star emoji into a rating value
         if (ctx.session.rating < 1 || ctx.session.rating > 5) {
             await ctx.reply('Invalid input. Please enter a number between 1 and 5');
             return;
         }
         await ctx.reply('Feedback: ' + ctx.session.feedback);
         await ctx.reply('Rating: ' + ctx.session.rating);
+        ctx.session.state = State.AWAITING_FEEDBACK_CONFIRMATION;
+
         // Create a menu with yes/no options
         await ctx.reply('Are you sure you want to submit the following feedback? (Yes/No)', {
             reply_markup: new InlineKeyboard().text('Yes', 'Yes').text('No', 'No'),
         });
-        ctx.session.state = State.AWAITING_FEEDBACK_CONFIRMATION;
     }
     else if (ctx.session.state === State.AWAITING_FEEDBACK_CONFIRMATION) {
-        const confirmation = ctx.message.text;
+        const confirmation = ctx.message?.text || ctx.callbackQuery?.data;
         if (confirmation === 'Yes') {
             // TODO: Create entity (whose uuid is in the format of an eth address) if it doesn't exist
             // TODO: Submit feedback on enitiy to UTU API
@@ -146,6 +149,11 @@ bot.on('message:text', async (ctx) => {
         await ctx.reply('Thanks for using Web3 Guardian! 😊\n\nEnter /restart to try another user.');
         ctx.session.state = State.IDLE;
     }
+});
+
+// match any callback query
+bot.callbackQuery(/.*/, async (ctx) => {
+    console.log(ctx.callbackQuery?.data);
 });
 
 // Handle errors
