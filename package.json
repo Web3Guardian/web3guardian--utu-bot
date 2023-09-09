@@ -18,9 +18,7 @@
   },
   "homepage": "https://github.com/DennohKim/web3guardian--utu-bot#readme",
   "devDependencies": {
-    "@types/node": "^20.5.9",
     "@types/qs": "^6.9.8",
-    "ts-node": "^10.9.1",
     "typescript": "^5.2.2"
   },
   "dependencies": {
