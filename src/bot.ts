@@ -38,7 +38,7 @@ bot.use(session({ initial }));
 // Middleware to intercept /start command
 bot.use(async (ctx) => {
     if (ctx.message?.text === '/start') {
-        await ctx.reply('<b>Web3 Guardian 🤖</b>\n\nA telegram bot that leverages the UTU Web3 Protocol to provide reliable reputation checks for telegram users 🧐');
+        await ctx.reply('Web3 Guardian 🤖:\n\nA telegram bot that leverages the UTU Web3 Protocol to provide reliable reputation checks for telegram users 🧐');
         await ctx.reply('Please enter your wallet\'s private key:');   // TODO: Should we generate our bot's responses with a language model to make them more expressive and different each time? 🤔
         ctx.session.state = State.AWAITING_PRIVATE_KEY;
     }
@@ -129,7 +129,7 @@ bot.on('message', async (ctx) => {
     else if (ctx.session.state === State.AWAITING_FEEDBACK_CONFIRMATION) {
         const confirmation = ctx.message.text;
         if (confirmation === 'Yes') {
-            // TODO: Create entity if it doesn't exist
+            // TODO: Create entity (whose uuid is in the format of an eth address) if it doesn't exist
             // TODO: Submit feedback on enitiy to UTU API
             await ctx.reply('Feedback submitted successfully!');
         }

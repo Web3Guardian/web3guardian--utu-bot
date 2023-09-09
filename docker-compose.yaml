@@ -9,15 +9,14 @@ services:
     depends_on:
       - redis
     volumes:
-      - .:/app
+      - ./src:/app/src
     env_file:
       - .env
-    command: 
+    command:
       - sh
       - -c
       - |
-        npx tsc --outDir dist
-        node dist/bot.js
+        npm start
   redis:
     image: "redis:alpine"
     restart: on-failure
