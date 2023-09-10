@@ -9,13 +9,14 @@ services:
     depends_on:
       - redis
     volumes:
-      - ./src:/app/src
+      - .:/app
     env_file:
       - .env
-    command:
+    command:  # install any new packages since last build then start the app
       - sh
       - -c
       - |
+        npm install 
         npm start
   redis:
     image: "redis:alpine"
@@ -27,3 +28,4 @@ services:
       interval: 1s
       timeout: 3s
       retries: 30
+      

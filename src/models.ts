@@ -1,4 +1,4 @@
-export interface AuthResponse {
+export interface IAuthResponse {
     access_token: string;
     expires_in: number;
     refresh_expires_in: number;

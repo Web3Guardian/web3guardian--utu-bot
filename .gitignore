@@ -1,3 +1,5 @@
+.idea
 .env
+ngrok.exe
 dist
 node_modules

@@ -1,5 +1,5 @@
 // eslint-disable-next-line import/no-extraneous-dependencies
-import { IFeedbackData, IFeedbackResponse, IEntity, AuthResponse } from './models';
+import { IFeedbackData, IFeedbackResponse, IEntity, IAuthResponse } from './models';
 import qs from "qs";
 import { Urls } from './urls';
 import axios, { AxiosRequestConfig } from 'axios';
@@ -94,13 +94,13 @@ function createEntityCriteria(uuid: string) {
     return { ids: { uuid } };
 }
 
-async function getAndStoreAccessToken(username: string, privateKey: string) {
+export async function getAndStoreAccessToken(username: string, privateKey: string) {
     const provider = new ethers.JsonRpcProvider(Urls.networkUrl);
     const signer = await provider.getSigner();
     const address = await signer.getAddress();
     const signature = await signer.signMessage("Sign in at UTU");
 
-    await axios.post<AuthResponse>(
+    await axios.post<IAuthResponse>(
         Urls.auth,
         {
             address,
