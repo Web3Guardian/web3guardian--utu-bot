@@ -1,6 +1,7 @@
 import { Bot, Context, InlineKeyboard, session, SessionFlavor } from 'grammy';
 import OpenAI from 'openai';
-import { config } from 'dotenv'; // Import config from dotenv
+import { config } from 'dotenv'; 
+import axios from 'axios';
 
 
 // Load environment variables from .env file
@@ -56,18 +57,19 @@ bot.command('start', async (ctx) => {
     'Web3 Guardian 🤖\n\nA telegram bot that leverages the UTU Web3 Protocol to provide reliable reputation checks on telegram users 🧐';
  
 console.log("prompt",prompt)
-	const response =  await openaiApi.completions.create({
-    model: 'text-davinci-003',
-    prompt: prompt,
-    max_tokens: 50,
-    temperature: 0.7,
-    n: 1,
-    stop: '\n',
-  });
+// 	const response =  await openaiApi.completions.create({
+//     model: 'text-davinci-003',
+//     prompt: prompt,
+//     max_tokens: 50,
+//     temperature: 0.7,
+//     n: 1,
+//     stop: '\n',
+//   });
 
-  const welcomeMessage = response.choices[0].text.trim();
+//   const welcomeMessage = response.choices[0].text.trim();
 
-  await ctx.reply(welcomeMessage, { parse_mode: 'HTML' });
+  await ctx.reply(prompt, { parse_mode: 'HTML' });
+  
   // TODO: Include instructions on how to obtain a private key from a wallet such as Metamask in the message below
   await ctx.reply("Please enter your wallet's private key 🔐:");
   ctx.session.state = State.AWAITING_PRIVATE_KEY;
@@ -82,6 +84,19 @@ bot.command('restart', async (ctx) => {
   }
 });
 
+// Function to check if a username exists
+async function doesUsernameExist(botToken: string, username: string) {
+  try {
+    const bot = new Bot(botToken);
+    const chat = await bot.api.getChat(username);
+    return !!chat;
+  } catch (error) {
+    console.error(error);
+    return false;
+  }
+}
+
+
 // Middleware to handle user inputs
 bot.on(['message:text', 'callback_query:data'], async (ctx) => {
   if (ctx.session.state === State.AWAITING_PRIVATE_KEY) {
@@ -94,15 +109,32 @@ bot.on(['message:text', 'callback_query:data'], async (ctx) => {
     await ctx.reply("Enter a user's username 👤:");
     ctx.session.state = State.AWAITING_USERNAME;
   } else if (ctx.session.state === State.AWAITING_USERNAME) {
-    ctx.session.otherUsername = ctx.message?.text! || ctx.callbackQuery?.data!;
     // TODO: check if this username exists in telegram and if not, prompt the user to reenter username
-    ctx.session.state = State.AWAITING_ACTION;
-    await ctx.reply('What would you like to do?', {
-      reply_markup: new InlineKeyboard()
-        .text("View User's Reputation 👀", 'View User Reputation')
-        .row()
-        .text('Submit Review on User 📝', 'Submit Review'),
-    });
+
+    const username = ctx.message?.text || ctx.callbackQuery?.data;
+
+    // Check if the username exists
+    const usernameExists = await doesUsernameExist(
+      process.env.BOT_TOKEN!,
+      username as string
+    );
+
+    if (usernameExists) {
+      // Username exists, proceed with your logic
+      ctx.session.otherUsername = username as string;
+      ctx.session.state = State.AWAITING_ACTION;
+      await ctx.reply('What would you like to do?', {
+        reply_markup: new InlineKeyboard()
+          .text("View User's Reputation 👀", 'View User Reputation')
+          .row()
+          .text('Submit Review on User 📝', 'Submit Review'),
+      });
+    } else {
+      // Username doesn't exist, prompt the user to reenter the username
+      await ctx.reply(
+        'The username does not exist. Please enter a valid username 👤:'
+      );
+    }
   } else if (ctx.session.state === State.AWAITING_ACTION) {
     const action = ctx.message?.text || ctx.callbackQuery?.data;
     if (action === 'View User Reputation') {
