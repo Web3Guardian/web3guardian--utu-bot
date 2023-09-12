@@ -109,7 +109,7 @@ bot.on(['message:text', 'callback_query:data'], async (ctx) => {
     await ctx.reply("Enter a user's username 👤:");
     ctx.session.state = State.AWAITING_USERNAME;
   } else if (ctx.session.state === State.AWAITING_USERNAME) {
-    // TODO: check if this username exists in telegram and if not, prompt the user to reenter username
+    //check if this username exists in telegram and if not, prompt the user to reenter username
 
     const username = ctx.message?.text || ctx.callbackQuery?.data;
 

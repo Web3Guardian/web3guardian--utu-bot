@@ -1,0 +1,61 @@
+<!-- views/connect-wallet.ejs -->
+
+<html>
+<head>
+  <title>Connect Your Wallet</title>
+</head>
+<body>
+  <h1>Connect Your Wallet</h1>
+  <button id="connectWalletButton">Connect Wallet</button>
+  <div id="walletAddressContainer">
+	<p id="walletAddress"></p>
+  </div>
+
+  <script>
+  // Function to check if wallet is already connected
+  async function checkWalletConnection() {
+    try {
+      if (typeof window.ethereum !== 'undefined') {
+        // Check if the user is already connected
+        const accounts = await window.ethereum.send('eth_accounts');
+        if (accounts.result.length > 0) {
+          const userAddress = accounts.result[0];
+          
+          // Hide the "Connect Wallet" button
+          document.getElementById('connectWalletButton').style.display = 'none';
+
+          // Display the user's address
+          const walletAddressContainer = document.getElementById('walletAddressContainer');
+          walletAddressContainer.style.display = 'block';
+          const walletAddress = document.getElementById('walletAddress');
+          walletAddress.textContent = `Connected with address: ${userAddress}`;
+        }
+      }
+    } catch (error) {
+      console.error(error);
+    }
+  }
+
+  // Function to connect the wallet
+  async function connectWallet() {
+    try {
+      if (typeof window.ethereum !== 'undefined') {
+        await window.ethereum.request({ method: 'eth_requestAccounts' });
+        checkWalletConnection(); // Check wallet connection after connecting
+      } else {
+        alert('MetaMask is not installed. Please install it to use this feature.');
+      }
+    } catch (error) {
+      console.error(error);
+      alert('Failed to connect to MetaMask. Please try again.');
+    }
+  }
+
+  // Add a click event listener to the Connect Wallet button
+  document.getElementById('connectWalletButton').addEventListener('click', connectWallet);
+
+  // Check wallet connection when the page loads
+  window.addEventListener('load', checkWalletConnection);
+  </script>
+</body>
+</html>

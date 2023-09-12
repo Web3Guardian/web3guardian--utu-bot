@@ -1,0 +1,32 @@
+<!-- views/connect-wallet.ejs -->
+
+<html>
+<head>
+  <title>Connect Your Wallet</title>
+</head>
+<body>
+  <h1>Connect Your Wallet</h1>
+  <button id="connect-wallet-button">Connect Wallet</button>
+
+  <script>
+    document.getElementById('connect-wallet-button').addEventListener('click', async () => {
+      // Check if MetaMask is installed and available
+      if (typeof window.ethereum !== 'undefined') {
+        try {
+          // Request wallet access from MetaMask
+          const accounts = await ethereum.request({ method: 'eth_requestAccounts' });
+          
+          // Send the wallet address or a session token back to your bot
+          const walletAddress = accounts[0];
+          // Redirect back to the bot with the wallet address info
+          window.location.href = `/bot-redirect?address=${walletAddress}`;
+        } catch (error) {
+          console.error('Error connecting wallet:', error);
+        }
+      } else {
+        console.error('MetaMask is not installed or available.');
+      }
+    });
+  </script>
+</body>
+</html>
