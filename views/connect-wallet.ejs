@@ -9,6 +9,7 @@
   <button id="connectWalletButton">Connect Wallet</button>
   <div id="walletAddressContainer">
 	<p id="walletAddress"></p>
+    <p id="signature"></p>
   </div>
 
   <script>
@@ -41,7 +42,22 @@
     try {
       if (typeof window.ethereum !== 'undefined') {
         await window.ethereum.request({ method: 'eth_requestAccounts' });
-        checkWalletConnection(); // Check wallet connection after connecting
+
+        // Get the user's account
+        const accounts = await window.ethereum.request({ method: 'eth_accounts' });
+        console.log("Account: " + accounts[0]);
+        document.getElementById('walletAddress').textContent = `Connected with address: ${accounts[0]}`;
+
+        // Sign a message
+        const message = "Sign in at UTU";
+        const signature = await window.ethereum.request({
+          method: 'personal_sign',
+          params: [message, accounts[0]],
+        });
+        console.log("Signature: " + signature);
+        document.getElementById('signature').textContent = `Signature: ${signature}`;
+
+        // checkWalletConnection(); // Check wallet connection after connecting
       } else {
         alert('MetaMask is not installed. Please install it to use this feature.');
       }
@@ -53,9 +69,6 @@
 
   // Add a click event listener to the Connect Wallet button
   document.getElementById('connectWalletButton').addEventListener('click', connectWallet);
-
-  // Check wallet connection when the page loads
-  window.addEventListener('load', checkWalletConnection);
   </script>
 </body>
 </html>

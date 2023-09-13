@@ -1,8 +1,13 @@
 import { Bot, Context, InlineKeyboard, session, SessionFlavor } from 'grammy';
 import OpenAI from 'openai';
-import { config } from 'dotenv'; 
+import { config } from 'dotenv';
+import express, { Request, Response } from 'express';
 import axios from 'axios';
 
+const app = express();
+
+// Set EJS as the view engine for express
+app.set('view engine', 'ejs');
 
 // Load environment variables from .env file
 config();
@@ -56,7 +61,7 @@ bot.command('start', async (ctx) => {
   const prompt =
     'Web3 Guardian 🤖\n\nA telegram bot that leverages the UTU Web3 Protocol to provide reliable reputation checks on telegram users 🧐';
  
-console.log("prompt",prompt)
+  console.log("prompt",prompt)
 // 	const response =  await openaiApi.completions.create({
 //     model: 'text-davinci-003',
 //     prompt: prompt,
@@ -244,3 +249,13 @@ bot.catch((err) => {
 // Start the bot
 console.log('Starting bot...');
 bot.start();
+
+
+// Start the server on port 3000
+app.listen(3000, () => {
+  console.log('Server is running on http://localhost:3000');
+});
+
+app.get('/connect-wallet', (req: Request, res: Response) => {
+  res.render('connect-wallet');
+});

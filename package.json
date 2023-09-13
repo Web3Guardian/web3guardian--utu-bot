@@ -6,7 +6,6 @@
   "scripts": {
     "start": "ts-node ./src/bot.ts",
     "dev": "ts-node-dev ./src/bot.ts",
-	"index": "ts-node src/index.ts",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {

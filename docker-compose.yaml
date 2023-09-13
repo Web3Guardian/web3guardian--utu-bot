@@ -16,7 +16,7 @@ services:
       - sh
       - -c
       - |
-        npm install 
+        npm install
         npm start
   redis:
     image: "redis:alpine"
