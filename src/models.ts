@@ -1,3 +1,8 @@
+export interface IAuthRequest {
+    address: string;
+    signature: string;
+}
+
 export interface IAuthResponse {
     access_token: string;
     expires_in: number;

@@ -59,7 +59,7 @@ bot.command('start', async (ctx) => {
   // TODO: Should we generate our bot's responses with a language model to make them more expressive and different each time? 🤔
 
   const prompt =
-    'Web3 Guardian 🤖\n\nA telegram bot that leverages the UTU Web3 Protocol to provide reliable reputation checks on telegram users 🧐';
+    'Web3Guardian 🤖\n\nA telegram bot that leverages the UTU Web3 Protocol to provide reliable reputation checks on telegram users 🧐';
  
   console.log("prompt",prompt)
 // 	const response =  await openaiApi.completions.create({

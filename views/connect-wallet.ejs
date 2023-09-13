@@ -2,16 +2,54 @@
 
 <html>
 <head>
-  <title>Connect Your Wallet</title>
+  <title>Web3Guardian - Connect Wallet</title>
+  <style>
+    /* Basic styling for the body */
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f0f0f0;
+      text-align: center;
+      margin: 0;
+      padding: 0;
+    }
+
+    /* Style the header */
+    h1 {
+      color: #333;
+      margin-top: 50px;
+      font-size: 2.5rem;
+    }
+
+    /* Style the paragraph */
+    p#status {
+      color: #666;
+      font-size: 1.2rem;
+      margin-top: 20px;
+    }
+
+    /* Style the button */
+    button#connectWalletButton {
+      background-color: #007BFF;
+      color: #fff;
+      font-size: 1.2rem;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 5px;
+      cursor: pointer;
+      margin-top: 20px;
+      transition: background-color 0.3s ease;
+    }
+
+    /* Hover effect for the button */
+    button#connectWalletButton:hover {
+      background-color: #0056b3;
+    }
+  </style>
 </head>
 <body>
-  <h1>Connect Your Wallet</h1>
+  <h1>Web3Guardian (UTU) 🤖</h1>
+  <p id="status">Please connect your wallet to access our services</p>
   <button id="connectWalletButton">Connect Wallet</button>
-  <div id="walletAddressContainer">
-	<p id="walletAddress"></p>
-    <p id="signature"></p>
-  </div>
-
   <script>
   // Function to connect the wallet
   async function connectWallet() {
@@ -20,11 +58,6 @@
         // Get the user's account
         const accounts = await window.ethereum.send('eth_accounts');
         const userAddress = accounts.result[0];
-        console.log("Address: " + userAddress);
-        document.getElementById('walletAddress').textContent = `Connected with address: ${userAddress}`;
-
-        // Hide the "Connect Wallet" button
-        document.getElementById('connectWalletButton').style.display = 'none';
 
         // Sign a message
         const message = "Sign in at UTU";
@@ -32,18 +65,33 @@
           method: 'personal_sign',
           params: [message, userAddress],
         });
-        console.log("Signature: " + signature);
-        document.getElementById('signature').textContent = `Signature: ${signature}`;
 
-        // Authorize with UTU api
+        // Make a POST request to the bot endpoint with the address and signature
+        const response = await fetch('/receive-signature', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            address: userAddress,
+            signature: signature
+          })
+        });
 
-        // Make a POST request to the bot endpoint with the result
+        // if status code is 200, display success message
+        if (response.status === 200) {
+          document.getElementById('connectWalletButton').style.display = 'none';
+          document.getElementById('status').textContent = 'Wallet connected successfully. You can now close this window and return to Telegram.';
+          window.open("https://t.me/web3guardian_utu_bot", "_blank");
+        } else {
+          document.getElementById('status').textContent = 'Failed to connect back to telegram. Please try again.';
+        }
       } else {
-        alert('MetaMask is not installed. Please install it to use this feature.');
+        document.getElementById('status').textContent = 'MetaMask is not installed. Please install it to authorize our application.';
       }
     } catch (error) {
       console.error(error);
-      alert('Failed to connect to MetaMask. Please try again.');
+      document.getElementById('status').textContent = 'Failed to connect to MetaMask. Please try again.';
     }
   }
 
