@@ -51,52 +51,58 @@
   <p id="status">Please connect your wallet to access our services</p>
   <button id="connectWalletButton">Connect Wallet</button>
   <script>
-  // Function to connect the wallet
-  async function connectWallet() {
-    try {
-      if (typeof window.ethereum !== 'undefined') {
-        // Get the user's account
-        const accounts = await window.ethereum.send('eth_accounts');
-        const userAddress = accounts.result[0];
+    // bot session variables
+    const chatId = '<%= chatId %>';
+    const userId = '<%= userId %>';
 
-        // Sign a message
-        const message = "Sign in at UTU";
-        const signature = await window.ethereum.request({
-          method: 'personal_sign',
-          params: [message, userAddress],
-        });
+    // Function to connect the wallet
+    async function connectWallet() {
+      try {
+        if (typeof window.ethereum !== 'undefined') {
+          // Get the user's account
+          const accounts = await window.ethereum.send('eth_accounts');
+          const userAddress = accounts.result[0];
 
-        // Make a POST request to the bot endpoint with the address and signature
-        const response = await fetch('/receive-signature', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({
-            address: userAddress,
-            signature: signature
-          })
-        });
+          // Sign a message
+          const message = "Sign in at UTU";
+          const signature = await window.ethereum.request({
+            method: 'personal_sign',
+            params: [message, userAddress],
+          });
 
-        // if status code is 200, display success message
-        if (response.status === 200) {
-          document.getElementById('connectWalletButton').style.display = 'none';
-          document.getElementById('status').textContent = 'Wallet connected successfully. You can now close this window and return to Telegram.';
-          window.open("https://t.me/web3guardian_utu_bot", "_blank");
+          // Make a POST request to the bot endpoint with the bot session-related data, address and signature
+          const response = await fetch('/receive-signature', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+              chatId: chatId,
+              userId: userId,
+              address: userAddress,
+              signature: signature
+            })
+          });
+
+          // if status code is 200, display success message
+          if (response.status === 200) {
+            document.getElementById('connectWalletButton').style.display = 'none';
+            document.getElementById('status').textContent = 'Wallet connected successfully. You may now close this window and return to Telegram.';
+            window.open("https://t.me/web3guardian_utu_bot", "_blank");
+          } else {
+            document.getElementById('status').textContent = 'Failed to connect back to telegram. Please try again.';
+          }
         } else {
-          document.getElementById('status').textContent = 'Failed to connect back to telegram. Please try again.';
+          document.getElementById('status').textContent = 'MetaMask is not installed. Please install it to authorize our application.';
         }
-      } else {
-        document.getElementById('status').textContent = 'MetaMask is not installed. Please install it to authorize our application.';
+      } catch (error) {
+        console.error(error);
+        document.getElementById('status').textContent = 'Failed to connect to MetaMask. Please try again.';
       }
-    } catch (error) {
-      console.error(error);
-      document.getElementById('status').textContent = 'Failed to connect to MetaMask. Please try again.';
     }
-  }
 
-  // Add a click event listener to the Connect Wallet button
-  document.getElementById('connectWalletButton').addEventListener('click', connectWallet);
+    // Add a click event listener to the Connect Wallet button
+    document.getElementById('connectWalletButton').addEventListener('click', connectWallet);
   </script>
 </body>
 </html>

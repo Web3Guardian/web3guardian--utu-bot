@@ -2,7 +2,8 @@ import { Bot, Context, InlineKeyboard, session, SessionFlavor } from 'grammy';
 import OpenAI from 'openai';
 import { config } from 'dotenv';
 import express, { Request, Response } from 'express';
-import axios from 'axios';
+import { ethers } from 'ethers';
+import {getAndStoreAccessToken} from "./api";
 
 const app = express();
 
@@ -22,7 +23,7 @@ const openaiApi = new OpenAI({
 // Define the states of the bot
 enum State {
   IDLE,
-  AWAITING_PRIVATE_KEY,
+  AWAITING_AUTH,
   AWAITING_USERNAME,
   AWAITING_ACTION,
   AWAITING_FEEDBACK,
@@ -74,19 +75,17 @@ bot.command('start', async (ctx) => {
 //   const welcomeMessage = response.choices[0].text.trim();
 
   await ctx.reply(prompt, { parse_mode: 'HTML' });
-  
-  // TODO: Include instructions on how to obtain a private key from a wallet such as Metamask in the message below
-  await ctx.reply("Please enter your wallet's private key 🔐:");
-  ctx.session.state = State.AWAITING_PRIVATE_KEY;
+  await ctx.reply(`Please [connect your wallet](${process.env.BASE_URL}/connect-wallet/${ctx.chat.id}/${ctx.from?.id}) to continue`, { parse_mode: 'MarkdownV2' });
+  ctx.session.state = State.AWAITING_AUTH;
 });
 
 // /restart command
 bot.command('restart', async (ctx) => {
-  if (ctx.session.state !== State.AWAITING_PRIVATE_KEY) {
+  //if (ctx.session.state !== State.AWAITING_AUTH) {
     ctx.session = initial();
     ctx.session.state = State.AWAITING_USERNAME;
     await ctx.reply("Enter a user's username 👤:");
-  }
+  //}
 });
 
 // Function to check if a username exists
@@ -104,16 +103,17 @@ async function doesUsernameExist(botToken: string, username: string) {
 
 // Middleware to handle user inputs
 bot.on(['message:text', 'callback_query:data'], async (ctx) => {
-  if (ctx.session.state === State.AWAITING_PRIVATE_KEY) {
-    const privateKey = ctx.message?.text || ctx.callbackQuery?.data;
-    const myUsername = ctx.from?.username;
-    // TODO: Obtain JWT from UTU API using the private key
-    // TODO: Store the JWT in Redis with the hash as the user's username and the key as 'accessToken'
-    // TODO: Store the refresh token (if any) in Redis with the hash as the user's username and the key as 'refreshToken'
-    // Now, ask the user to enter a user's username
-    await ctx.reply("Enter a user's username 👤:");
-    ctx.session.state = State.AWAITING_USERNAME;
-  } else if (ctx.session.state === State.AWAITING_USERNAME) {
+  // if (ctx.session.state === State.AWAITING_AUTH) {
+  //   const privateKey = ctx.message?.text || ctx.callbackQuery?.data;
+  //   const myUsername = ctx.from?.username;
+  //   // TODO: Obtain JWT from UTU API using the private key
+  //   // TODO: Store the JWT in Redis with the hash as the user's username and the key as 'accessToken'
+  //   // TODO: Store the refresh token (if any) in Redis with the hash as the user's username and the key as 'refreshToken'
+  //   // Now, ask the user to enter a user's username
+  //   await ctx.reply("Enter a user's username 👤:");
+  //   ctx.session.state = State.AWAITING_USERNAME;
+  // } else
+  if (ctx.session.state === State.AWAITING_USERNAME) {
     //check if this username exists in telegram and if not, prompt the user to reenter username
 
     const username = ctx.message?.text || ctx.callbackQuery?.data;
@@ -256,6 +256,57 @@ app.listen(3000, () => {
   console.log('Server is running on http://localhost:3000');
 });
 
-app.get('/connect-wallet', (req: Request, res: Response) => {
-  res.render('connect-wallet');
+// Render the connect-wallet page
+app.get('/connect-wallet/:chatId/:userId', (req: Request, res: Response) => {
+  // Extract the chat ID and user ID from the path variables
+  const { chatId, userId } = req.params;
+
+  // Render template with chatId and userId as local variables
+  res.render('connect-wallet', { chatId, userId });
+});
+
+// Middleware to parse JSON data
+app.use(express.json());
+
+// Handle the connect-wallet form submission
+app.post('/receive-signature', (req, res) => {
+  console.log(req.body);
+  const { chatId, userId, address, signature } = req.body;
+
+  // Convert to a checksummed address
+  const checksummedAddress = ethers.getAddress(address);
+
+  // Authenticate with UTU API
+  getAndStoreAccessToken(userId, checksummedAddress, signature)
+    .then(() => {
+      // reply to the user that the authentication was successful
+      bot.api.sendMessage(chatId, 'Wallet connected successfully!');
+
+      // Change the state of the bot to AWAITING_USERNAME
+      const update = {
+        update_id: 0,
+        message_id: 0,
+        from: {
+          id: userId,
+          is_bot: false,
+          first_name: 'User',
+        },
+        chat: {
+          id: chatId,
+          type: 'private',
+        },
+        date: Math.floor(Date.now() / 1000),
+        text: '/restart',
+      };
+
+      bot.handleUpdate(update);
+    })
+    .catch((error) => {
+      // reply to the user that the authentication failed
+      bot.api.sendMessage(chatId, 'Wallet connection failed!');
+      console.error(error);
+      res.status(500).json({ error });
+    });
+
+  res.json({ status: 200 });
 });
