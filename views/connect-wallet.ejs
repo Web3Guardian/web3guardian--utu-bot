@@ -13,51 +13,31 @@
   </div>
 
   <script>
-  // Function to check if wallet is already connected
-  async function checkWalletConnection() {
-    try {
-      if (typeof window.ethereum !== 'undefined') {
-        // Check if the user is already connected
-        const accounts = await window.ethereum.send('eth_accounts');
-        if (accounts.result.length > 0) {
-          const userAddress = accounts.result[0];
-          
-          // Hide the "Connect Wallet" button
-          document.getElementById('connectWalletButton').style.display = 'none';
-
-          // Display the user's address
-          const walletAddressContainer = document.getElementById('walletAddressContainer');
-          walletAddressContainer.style.display = 'block';
-          const walletAddress = document.getElementById('walletAddress');
-          walletAddress.textContent = `Connected with address: ${userAddress}`;
-        }
-      }
-    } catch (error) {
-      console.error(error);
-    }
-  }
-
   // Function to connect the wallet
   async function connectWallet() {
     try {
       if (typeof window.ethereum !== 'undefined') {
-        await window.ethereum.request({ method: 'eth_requestAccounts' });
-
         // Get the user's account
-        const accounts = await window.ethereum.request({ method: 'eth_accounts' });
-        console.log("Account: " + accounts[0]);
-        document.getElementById('walletAddress').textContent = `Connected with address: ${accounts[0]}`;
+        const accounts = await window.ethereum.send('eth_accounts');
+        const userAddress = accounts.result[0];
+        console.log("Address: " + userAddress);
+        document.getElementById('walletAddress').textContent = `Connected with address: ${userAddress}`;
+
+        // Hide the "Connect Wallet" button
+        document.getElementById('connectWalletButton').style.display = 'none';
 
         // Sign a message
         const message = "Sign in at UTU";
         const signature = await window.ethereum.request({
           method: 'personal_sign',
-          params: [message, accounts[0]],
+          params: [message, userAddress],
         });
         console.log("Signature: " + signature);
         document.getElementById('signature').textContent = `Signature: ${signature}`;
 
-        // checkWalletConnection(); // Check wallet connection after connecting
+        // Authorize with UTU api
+
+        // Make a POST request to the bot endpoint with the result
       } else {
         alert('MetaMask is not installed. Please install it to use this feature.');
       }
