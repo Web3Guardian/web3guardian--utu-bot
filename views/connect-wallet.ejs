@@ -1,61 +1,97 @@
-<!-- views/connect-wallet.ejs -->
-
+<!DOCTYPE html>
 <html>
-<head>
-  <title>Connect Your Wallet</title>
-</head>
-<body>
-  <h1>Connect Your Wallet</h1>
-  <button id="connectWalletButton">Connect Wallet</button>
-  <div id="walletAddressContainer">
-	<p id="walletAddress"></p>
-  </div>
+  <head>
+    <title>Connect MetaMask</title>
+  </head>
+  <body>
+    <button id="connect-button">Connect Wallet</button>
+    <button id="connect-utu-button" >Connect to UTU</button>
 
-  <script>
-  // Function to check if wallet is already connected
-  async function checkWalletConnection() {
-    try {
-      if (typeof window.ethereum !== 'undefined') {
-        // Check if the user is already connected
-        const accounts = await window.ethereum.send('eth_accounts');
-        if (accounts.result.length > 0) {
-          const userAddress = accounts.result[0];
-          
-          // Hide the "Connect Wallet" button
-          document.getElementById('connectWalletButton').style.display = 'none';
+    <div id="status"></div>
 
-          // Display the user's address
-          const walletAddressContainer = document.getElementById('walletAddressContainer');
-          walletAddressContainer.style.display = 'block';
-          const walletAddress = document.getElementById('walletAddress');
-          walletAddress.textContent = `Connected with address: ${userAddress}`;
+    <script
+      src="https://cdnjs.cloudflare.com/ajax/libs/ethers/5.7.2/ethers.umd.min.js"
+      integrity="sha512-FDcVY+g7vc5CXANbrTSg1K5qLyriCsGDYCE02Li1tXEYdNQPvLPHNE+rT2Mjei8N7fZbe0WLhw27j2SrGRpdMg=="
+      crossorigin="anonymous"
+      referrerpolicy="no-referrer"
+    ></script>
+    <script>
+     
+
+      window.addEventListener('load', () => {
+        // After window loaded, check for MetaMask and update button
+        if (typeof ethereum !== 'undefined') {
+          document.getElementById('connect-button').disabled = false;
+          document.getElementById('connect-button').innerText =
+            'Connect MetaMask';
+          document.getElementById('status').innerText = 'MetaMask is installed';
+        } else {
+          document.getElementById('status').innerText =
+            'Please install MetaMask and refresh the page.';
+        }
+      });
+
+      document
+        .getElementById('connect-button')
+        .addEventListener('click', async () => {
+          // Initialize a provider
+          const provider = new ethers.providers.Web3Provider(window.ethereum);
+
+          await provider.send('eth_requestAccounts', []);
+          const signer = provider.getSigner();
+
+          // Handle accounts changing
+          ethereum.on('accountsChanged', (accounts) => {
+            document.getElementById(
+              'status'
+            ).innerText = `Connected: ${accounts[0]}`;
+          });
+
+          // Handle chain (network) changing
+          ethereum.on('chainChanged', (chainId) => {
+            document.getElementById(
+              'status'
+            ).innerText = `Chain changed: ${chainId}`;
+          });
+
+          try {
+            // Sign a message
+            const signature = await signer.signMessage('Hello World');
+            console.log(signer);
+
+            document.getElementById(
+              'status'
+            ).innerText = `Signature: ${signature}`;
+          } catch (err) {
+            document.getElementById(
+              'status'
+            ).innerText = `Error: ${err.message}`;
+          }
+        });
+
+		 // Example usage in your connect-wallet.ejs JavaScript code
+      async function connectToUTU() {
+        try {
+          // Check if MetaMask is installed and connected
+          if (typeof ethereum !== 'undefined' && ethereum.selectedAddress) {
+            const signer = new ethers.Wallet(ethereum.selectedAddress);
+
+            // Call the getAndStoreAccessToken function to authenticate with UTU
+            await getAndStoreAccessToken(username, signer);
+
+            // Display a success message or update the UI accordingly
+            document.getElementById('status').innerText = 'Connected to UTU';
+          } else {
+            // Handle the case where MetaMask is not installed or connected
+            document.getElementById('status').innerText =
+              'Please install and connect MetaMask';
+          }
+        } catch (error) {
+          // Handle errors, display an error message, or log the error
+          console.error(error);
+          document.getElementById('status').innerText = 'An error occurred';
         }
       }
-    } catch (error) {
-      console.error(error);
-    }
-  }
-
-  // Function to connect the wallet
-  async function connectWallet() {
-    try {
-      if (typeof window.ethereum !== 'undefined') {
-        await window.ethereum.request({ method: 'eth_requestAccounts' });
-        checkWalletConnection(); // Check wallet connection after connecting
-      } else {
-        alert('MetaMask is not installed. Please install it to use this feature.');
-      }
-    } catch (error) {
-      console.error(error);
-      alert('Failed to connect to MetaMask. Please try again.');
-    }
-  }
-
-  // Add a click event listener to the Connect Wallet button
-  document.getElementById('connectWalletButton').addEventListener('click', connectWallet);
-
-  // Check wallet connection when the page loads
-  window.addEventListener('load', checkWalletConnection);
-  </script>
-</body>
+    </script>
+  </body>
 </html>

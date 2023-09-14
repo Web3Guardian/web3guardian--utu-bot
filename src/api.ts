@@ -4,7 +4,7 @@ import qs from "qs";
 import { Urls } from './urls';
 import axios, { AxiosRequestConfig } from 'axios';
 import { redisClient } from './redisClient';
-import { ethers } from 'ethers';
+import { Wallet, ethers } from 'ethers';
 
 /**
  * Use the UTU API to post feedback.
@@ -93,33 +93,39 @@ export async function addEntity(username: string, sourceUuid: string, targetUuid
 function createEntityCriteria(uuid: string) {
     return { ids: { uuid } };
 }
+export async function getAndStoreAccessToken(username: string, signer: Wallet) {
+  try {
+    // Get the signer's Ethereum address
+    const address = signer.address;
 
-export async function getAndStoreAccessToken(username: string, privateKey: string) {
-    const provider = new ethers.JsonRpcProvider(Urls.networkUrl);
-    const signer = await provider.getSigner();
-    const address = await signer.getAddress();
-    const signature = await signer.signMessage("Sign in at UTU");
+    // Sign a message for authentication
+    const signature = await signer.signMessage('Sign in at UTU');
 
-    await axios.post<IAuthResponse>(
-        Urls.auth,
-        {
-            address,
-            signature,
-        },
-        {
-            withCredentials: false,
-        }
-    ).then(async result => {
-        //store all keys in redis
-        await redisClient.hSet(username, {
-            accessToken: result.data.access_token,
-            accessTokenExpiry: Date.now() + result.data.expires_in * 1000,
-            refreshToken: result.data.refresh_token,
-            refreshTokenExpiry: Date.now() + result.data.refresh_expires_in * 1000
-        });
-    }).catch(error => {
-        // TODO: handle error
+    // Send a request to your backend to authenticate with UTU
+    const response = await axios.post<IAuthResponse>(
+      Urls.auth,
+      {
+        address,
+        signature,
+      },
+      {
+        withCredentials: false,
+      }
+    );
+
+    // Store the access token in Redis
+    await redisClient.hSet(username, {
+      accessToken: response.data.access_token,
+      accessTokenExpiry: Date.now() + response.data.expires_in * 1000,
+      refreshToken: response.data.refresh_token,
+      refreshTokenExpiry: Date.now() + response.data.refresh_expires_in * 1000,
     });
+  } catch (error) {
+    // Handle errors
+    console.error(error);
+    // Throw an error or handle it according to your application's logic
+    throw error;
+  }
 }
 
 async function refreshAccessToken(username: string, refreshToken: string) {
