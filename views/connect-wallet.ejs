@@ -53,7 +53,6 @@
   <script>
     // bot session variables
     const chatId = '<%= chatId %>';
-    const userId = '<%= userId %>';
 
     // Function to connect the wallet
     async function connectWallet() {
@@ -78,7 +77,6 @@
             },
             body: JSON.stringify({
               chatId: chatId,
-              userId: userId,
               address: userAddress,
               signature: signature
             })

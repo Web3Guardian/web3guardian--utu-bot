@@ -1,9 +1,9 @@
 // eslint-disable-next-line import/no-extraneous-dependencies
-import { IFeedbackData, IFeedbackResponse, IEntity, IAuthResponse } from './models';
+import {IFeedbackData, IFeedbackResponse, IEntity, IAuthResponse, IAuthRequest} from './models';
 import qs from "qs";
-import { Urls } from './urls';
-import axios, { AxiosRequestConfig } from 'axios';
-import { redisClient } from './redisClient';
+import {Urls} from './urls';
+import axios, {AxiosRequestConfig} from 'axios';
+import {redisClient} from './redisClient';
 
 /**
  * Use the UTU API to post feedback.
@@ -58,8 +58,8 @@ export async function getFeedbackSummary(userId: string, sourceUuid: string, tar
 /**
  * Add an entity to UTU.
  * @param userId the telegram userId of the user adding the entity
- * @param sourceUuid 
- * @param targetUuid 
+ * @param sourceUuid
+ * @param targetUuid
  * @param transactionId
  * @param entityData
  * @returns a promise which will resolve with an unspecified value when the entity was added successfully, and will reject otherwise.
@@ -80,47 +80,23 @@ export async function addEntity(userId: string, sourceUuid: string, targetUuid: 
 }
 
 function createEntityCriteria(uuid: string) {
-    return { ids: { uuid } };
+    return {ids: {uuid}};
 }
 
-export async function getAndStoreAccessToken(userId: string, address: string, signature: string) {
-    await axios.post<IAuthResponse>(
-        Urls.auth,
-        {
-            address,
-            signature,
-        },
-        {
-            withCredentials: false,
-        }
-    ).then(async result => {
-        //store all keys in redis
-        await redisClient.hSet(userId, {
-            accessToken: result.data.access_token,
-            accessTokenExpiry: Date.now() + result.data.expires_in * 1000,
-            refreshToken: result.data.refresh_token,
-            refreshTokenExpiry: Date.now() + result.data.refresh_expires_in * 1000
+export async function getAndStoreAccessToken(userId: string, payload: IAuthRequest) {
+    await axios.post<IAuthResponse>(Urls.auth, payload, {withCredentials: false,})
+        .then(async result => {
+            //store all fields of IAuthResponse in redis with userId as the key
+            await redisClient.hSet(userId, {...result.data});
         });
-    });
-}
-
-async function refreshAccessToken(userId: string, refreshToken: string) {
-    // TODO: use the refresh token to obtain and store new access token
 }
 
 async function withAuthHeader(userId: string, config: AxiosRequestConfig = {}) {
     // obtain access token from Redis
-    let accessToken: string | undefined = await redisClient.hGet(userId, 'accessToken');
-    let accessTokenExpired: boolean = (await redisClient.hGet(userId, 'accessTokenExpiry') as unknown as number) > Date.now();
-    let refreshToken: string | undefined = await redisClient.hGet(userId, 'refreshToken');
+    let accessToken: string | undefined = await redisClient.hGet(userId, 'access_token');
     if (!accessToken) {
         throw new Error('User is not authenticated');
     }
-    // if (accessTokenExpired) {
-    //     // refresh access token
-    //     await refreshAccessToken(userId, refreshToken!);
-    //     accessToken = await redisClient.hGet(userId, 'accessToken');
-    // }
 
     config.headers = {
         ...config.headers,
