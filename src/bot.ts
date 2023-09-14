@@ -50,15 +50,12 @@ function initial(): SessionData {
 // set up storage as redis and implement custom handlers for read, write and delete
 const storage = {
     read: async (key: string): Promise<SessionData> => {
-        console.log('reading from redis hash ' + key);
         return (await redisClient.hGetAll(key)) as unknown as SessionData;
     },
     write: async (key: string, value: SessionData) => {
-        console.log('writing to redis hash ' + key);
         await redisClient.hSet(key, {...value});
     },
     delete: async (key: string) => {
-        console.log('deleting from redis hash ' + key);
         await redisClient.del(key);
     }
 }
@@ -67,56 +64,38 @@ bot.use(session({initial, storage: storage}));
 // /start command
 bot.command('start', async (ctx) => {
     await ctx.reply('<b>Web3Guardian 🤖</b>\n\nA telegram bot that leverages the UTU Web3 Protocol to provide reliable reputation checks on telegram users 🧐', {parse_mode: 'HTML'});
-    await ctx.reply(`Please [connect your wallet](${process.env.BASE_URL}/connect-wallet/${ctx.chat.id}) to continue`);
-    ctx.session.state = State.AWAITING_AUTH;
-});
 
-// /restart command
-bot.command('restart', async (ctx) => {
-    if (ctx.session.state != State.AWAITING_AUTH) {
-        ctx.session = initial();
-        ctx.session.state = State.AWAITING_USERNAME;
+    // Check if the user is already authenticated
+    const accessToken = await redisClient.hGet(ctx.chat.id.toString(), 'access_token');
+    if(accessToken){
         await ctx.reply("Enter a user's username 👤:");
+        ctx.session.state = State.AWAITING_USERNAME;
+    } else {
+        await ctx.reply(`To continue, please authorize our app by visiting ${process.env.BASE_URL}/connect-wallet/${ctx.chat.id} and connecting your wallet`);
+        ctx.session.state = State.AWAITING_AUTH;
     }
 });
 
-// Function to check if a username exists
-async function doesUsernameExist(botToken: string, username: string) {
-    try {
-        const bot = new Bot(botToken);
-        const chat = await bot.api.getChat(username);
-        return !!chat;
-    } catch (error) {
-        console.error(error);
-        return false;
-    }
-}
-
+// /logout command
+bot.command('logout', async (ctx) => {
+    // Delete the user's session from redis
+    await redisClient.del(ctx.chat.id.toString());
+    ctx.session.state = State.IDLE;
+    await ctx.reply('You have been logged out successfully! Enter /start to restart the bot.');
+});
 
 // Middleware to handle user inputs
 bot.on(['message:text', 'callback_query:data'], async (ctx) => {
     if (ctx.session.state == State.AWAITING_USERNAME) {
-        //check if this username exists in telegram and if not, prompt the user to reenter username
         const username = ctx.message?.text || ctx.callbackQuery?.data;
-
-        // Check if the username exists
-        const usernameExists = await doesUsernameExist(
-            process.env.BOT_TOKEN!,
-            username as string
-        );
-
-        if (usernameExists) {
-            ctx.session.otherUsername = username as string;
-            ctx.session.state = State.AWAITING_ACTION;
-            await ctx.reply('What would you like to do?', {
-                reply_markup: new InlineKeyboard()
-                    .text("View User's Reputation 👀", 'View User Reputation')
-                    .row()
-                    .text('Submit Review on User 📝', 'Submit Review'),
-            });
-        } else {
-            await ctx.reply('That username is not on telegram. Please try another username 👤:');
-        }
+        ctx.session.otherUsername = username as string;
+        ctx.session.state = State.AWAITING_ACTION;
+        await ctx.reply('What would you like to do?', {
+            reply_markup: new InlineKeyboard()
+                .text("View User's Reputation 👀", 'View User Reputation')
+                .row()
+                .text('Submit Review on User 📝', 'Submit Review'),
+        });
     } else if (ctx.session.state == State.AWAITING_ACTION) {
         const action = ctx.message?.text || ctx.callbackQuery?.data;
         if (action === 'View User Reputation') {
@@ -141,7 +120,7 @@ bot.on(['message:text', 'callback_query:data'], async (ctx) => {
             }
 
             await ctx.reply(
-                'Thanks for using Web3 Guardian! 😊\n\nEnter /restart to try another user.'
+                'Thanks for using Web3 Guardian! 😊\n\nEnter /start to try another user or /logout to logout.'
             );
             ctx.session.state = State.IDLE;
         } else if (action === 'Submit Review') {
@@ -202,7 +181,7 @@ bot.on(['message:text', 'callback_query:data'], async (ctx) => {
         }
 
         await ctx.reply(
-            'Thanks for using Web3 Guardian! 😊\n\nEnter /restart to try another user.'
+            'Thanks for using Web3 Guardian! 😊\n\nEnter /start to try another user or /logout to logout.'
         );
         ctx.session.state = State.IDLE;
     }
@@ -247,9 +226,9 @@ app.post('/receive-signature', (req, res) => {
         address: checksummedAddress,
         signature: signature,
     })
-        .then(() => {
+        .then(async () => {
             // reply to the user that the authentication was successful
-            bot.api.sendMessage(chatId, 'Wallet connected successfully!');
+            await bot.api.sendMessage(chatId, 'Wallet connected successfully!');
 
             // Change the state of the bot to AWAITING_USERNAME
             redisClient.hSet(chatId, 'state', State.AWAITING_USERNAME)
