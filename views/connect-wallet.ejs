@@ -1,119 +1,110 @@
 <!-- views/connect-wallet.ejs -->
 
 <html>
-  <head>
-    <title>Web3Guardian - Connect Wallet</title>
-    <style>
-      /* Basic styling for the body */
-      body {
-        font-family: Arial, sans-serif;
-        background-color: #f0f0f0;
-        text-align: center;
-        margin: 0;
-        padding: 0;
-      }
+<head>
+  <title>Web3Guardian - Connect Wallet</title>
+  <style>
+    /* Basic styling for the body */
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f0f0f0;
+      text-align: center;
+      margin: 0;
+      padding: 0;
+    }
 
-      /* Style the header */
-      h1 {
-        color: #333;
-        margin-top: 50px;
-        font-size: 2.5rem;
-      }
+    /* Style the header */
+    h1 {
+      color: #333;
+      margin-top: 50px;
+      font-size: 2.5rem;
+    }
 
-      /* Style the paragraph */
-      p#status {
-        color: #666;
-        font-size: 1.2rem;
-        margin-top: 20px;
-      }
+    /* Style the paragraph */
+    p#status {
+      color: #666;
+      font-size: 1.2rem;
+      margin-top: 20px;
+    }
 
-      /* Style the button */
-      button#connectWalletButton {
-        background-color: #007bff;
-        color: #fff;
-        font-size: 1.2rem;
-        border: none;
-        padding: 10px 20px;
-        border-radius: 5px;
-        cursor: pointer;
-        margin-top: 20px;
-        transition: background-color 0.3s ease;
-      }
+    /* Style the button */
+    button#connectWalletButton {
+      background-color: #007BFF;
+      color: #fff;
+      font-size: 1.2rem;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 5px;
+      cursor: pointer;
+      margin-top: 20px;
+      transition: background-color 0.3s ease;
+    }
 
-      /* Hover effect for the button */
-      button#connectWalletButton:hover {
-        background-color: #0056b3;
-      }
-    </style>
-  </head>
-  <body>
-    <h1>Web3Guardian (UTU) 🤖</h1>
-    <p id="status">Please connect your wallet to access our services</p>
-    <button id="connectWalletButton">Connect Wallet</button>
-    <script
-      src="https://cdnjs.cloudflare.com/ajax/libs/ethers/5.7.2/ethers.umd.min.js"
-      integrity="sha512-FDcVY+g7vc5CXANbrTSg1K5qLyriCsGDYCE02Li1tXEYdNQPvLPHNE+rT2Mjei8N7fZbe0WLhw27j2SrGRpdMg=="
-      crossorigin="anonymous"
-      referrerpolicy="no-referrer"
-    ></script>
-    <script>
-      // bot session variables
-      const chatId = '<%= chatId %>';
+    /* Hover effect for the button */
+    button#connectWalletButton:hover {
+      background-color: #0056b3;
+    }
+  </style>
+</head>
+<body>
+  <h1>Web3Guardian (UTU) 🤖</h1>
+  <p id="status">Please connect your wallet to access our services</p>
+  <button id="connectWalletButton">Connect Wallet</button>
+  <script src="https://cdn.ethers.io/lib/ethers-5.0.umd.min.js"></script>
+  <script>
+    // bot session variables
+    const chatId = '<%= chatId %>';
 
-      // Function to connect the wallet
-      async function connectWallet() {
-        try {
-          if (typeof ethers !== 'undefined') {
-            // Create an instance of the ethers provider using the injected provider
-            const provider = new ethers.providers.Web3Provider(window.ethereum);
+    // Function to connect the wallet
+    async function connectWallet() {
+      try {
+        if (typeof ethers !== 'undefined') {
+          // Enable access to the user's accounts
+          await window.ethereum.enable();
 
-            // Get the user's account
-            const accounts = await provider.listAccounts();
-            const userAddress = accounts[0];
+          // Create an instance of the ethers provider using the injected provider
+          const provider = new ethers.providers.Web3Provider(window.ethereum);
 
-            // Sign a message
-            const message = 'Sign in at UTU';
-            const signature = await provider.getSigner().signMessage(message);
+          // Get the user's account
+          const accounts = await provider.send('eth_requestAccounts');
+          const userAddress = accounts[0];
 
-            // Make a POST request to the bot endpoint with the bot session-related data, address, and signature
-            const response = await fetch('/receive-signature', {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json',
-              },
-              body: JSON.stringify({
-                chatId: chatId,
-                address: userAddress,
-                signature: signature,
-              }),
-            });
+          // Sign a message
+          const message = "Sign in at UTU";
+          const signature = await provider.getSigner().signMessage(message);
 
-            // if status code is 200, display success message
-            if (response.status === 200) {
-              document.getElementById('connectWalletButton').style.display =
-                'none';
-              document.getElementById('status').textContent =
-                'Wallet connected successfully. You may now close this window and return to Telegram.';
-              window.open('https://t.me/web3guardian_utu_bot', '_blank');
-            } else {
-              document.getElementById('status').textContent =
-                'Failed to connect back to telegram. Please try again.';
-            }
+          // Make a POST request to the bot endpoint with the bot session-related data, address, and signature
+          const response = await fetch('/receive-signature', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+              chatId: chatId,
+              address: userAddress,
+              signature: signature
+            })
+          });
+
+          // if status code is 200, display success message
+          if (response.status === 200) {
+            document.getElementById('connectWalletButton').style.display = 'none';
+            document.getElementById('status').textContent = 'Wallet connected successfully. You may now close this window and return to Telegram.';
+            window.open("https://t.me/web3guardian_utu_bot", "_blank");
           } else {
-            document.getElementById('status').textContent =
-              'MetaMask is not installed. Please install it to authorize our application.';
+            document.getElementById('status').textContent = 'Failed to connect back to Telegram. Please try again.';
           }
-        } catch (error) {
-          console.error(error);
-          document.getElementById('status').textContent =
-            'Failed to connect to MetaMask. Please try again.';
+        } else {
+          document.getElementById('status').textContent = 'MetaMask is not installed. Please install it to authorize our application.';
         }
+      } catch (error) {
+        console.error(error);
+        document.getElementById('status').textContent = 'Failed to connect to MetaMask. Please try again.';
       }
+    }
 
-      // Add a click event listener to the Connect Wallet button
-      document
-        .getElementById('connectWalletButton')
-        .addEventListener('click', connectWallet);
-    </script>
-  </body>
+    // Add a click event listener to the Connect Wallet button
+    document.getElementById('connectWalletButton').addEventListener('click', connectWallet);
+  </script>
+</body>
 </html>
