@@ -79,9 +79,15 @@ bot.command('start', async (ctx) => {
 // /logout command
 bot.command('logout', async (ctx) => {
     // Delete the user's session from redis
-    await redisClient.del(ctx.chat.id.toString());
-    ctx.session.state = State.IDLE;
-    await ctx.reply('You have been logged out successfully! Enter /start to restart the bot.');
+    await redisClient.del(ctx.chat.id.toString())
+        .then(() => {
+            ctx.session = initial();
+            ctx.reply('You have been logged out successfully! Enter /start to restart the bot.');
+        })
+        .catch((error) => {
+            console.error(error);
+            ctx.reply('Something went wrong. Please try again.');
+        });
 });
 
 // Middleware to handle user inputs
