@@ -48,7 +48,7 @@
 </head>
 <body>
   <h1>Web3Guardian (UTU) 🤖</h1>
-  <p id="status">Please connect your wallet to access our services</p>
+  <p id="status">Please connect your ethereum wallet to access our services</p>
   <button id="connectWalletButton">Connect Wallet</button>
   <script src="https://cdn.ethers.io/lib/ethers-5.0.umd.min.js"></script>
   <script>
@@ -95,11 +95,11 @@
             document.getElementById('status').textContent = 'Failed to connect back to Telegram. Please try again.';
           }
         } else {
-          document.getElementById('status').textContent = 'MetaMask is not installed. Please install it to authorize our application.';
+          document.getElementById('status').textContent = 'Wallet extension (such as metamask) not installed. Please install one to authorize our application.';
         }
       } catch (error) {
         console.error(error);
-        document.getElementById('status').textContent = 'Failed to connect to MetaMask. Please try again.';
+        document.getElementById('status').textContent = 'Failed to connect to wallet. Please try again.';
       }
     }
 

@@ -72,6 +72,10 @@ bot.command('start', async (ctx) => {
         ctx.session.state = State.AWAITING_USERNAME;
     } else {
         await ctx.reply(`To continue, please authorize our app by visiting ${process.env.BASE_URL}/connect-wallet/${ctx.chat.id} and connecting your wallet`);
+        // await ctx.reply('Please connect your wallet to continue', {
+        //     reply_markup: new InlineKeyboard()
+        //         .url("Connect Wallet", `${process.env.BASE_URL}/connect-wallet/${ctx.chat.id}`)
+        // });
         ctx.session.state = State.AWAITING_AUTH;
     }
 });
