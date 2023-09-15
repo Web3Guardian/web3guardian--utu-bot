@@ -1,3 +1,5 @@
+import { v4 as uuidv4 } from 'uuid';
+
 export interface IAuthRequest {
     address: string;
     signature: string;
@@ -13,12 +15,21 @@ export interface IAuthResponse {
     scope: string;
 }
 
-export interface IEntity {
+/** for creating an entity */
+export class Entity {
     name: string;
-    uuid: string;
+    ids: {
+        uuid: string;
+    }
     image: string;
     type: string;
-    properties: Record<string, unknown>;
+
+    constructor(name: string, image?: string) {
+        this.name = name;
+        this.ids = {uuid: uuidv4()};
+        this.image = image || `https://api.dicebear.com/7.x/adventurer/svg?seed=${this.ids.uuid}`;
+        this.type = "telegram_user"
+    }
 }
 
 /** for providing feedback */

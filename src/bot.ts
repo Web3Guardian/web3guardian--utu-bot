@@ -2,8 +2,9 @@ import {Bot, Context, InlineKeyboard, session, SessionFlavor} from 'grammy';
 import {config} from 'dotenv';
 import express, {Request, Response} from 'express';
 import {ethers} from 'ethers';
-import {getAndStoreAccessToken} from "./api";
+import {addEntity, getAndStoreAccessToken} from "./api";
 import {redisClient} from "./redisClient";
+import {Entity} from "./models";
 
 const app = express();
 
@@ -26,6 +27,7 @@ enum State {
 
 interface SessionData {
     state: State; // the current state of the bot
+    myUsername: string; // the username of the user who is using the bot
     otherUsername: string; // the username of the user to get or submit feedback on
     feedback: string; // the feedback to submit
     rating: number; // the rating to submit
@@ -41,6 +43,7 @@ const bot = new Bot<MyContext>(process.env.BOT_TOKEN as string);
 function initial(): SessionData {
     return {
         state: State.IDLE,
+        myUsername: '',
         otherUsername: '',
         feedback: '',
         rating: 0,
@@ -64,6 +67,7 @@ bot.use(session({initial, storage: storage}));
 // /start command
 bot.command('start', async (ctx) => {
     await ctx.reply('<b>Web3Guardian 🤖</b>\n\nA telegram bot that leverages the UTU Web3 Protocol to provide reliable reputation checks on telegram users 🧐', {parse_mode: 'HTML'});
+    ctx.session.myUsername = ctx.from?.username as string;
 
     // Check if the user is already authenticated
     const accessToken = await redisClient.hGet(ctx.chat.id.toString(), 'access_token');
@@ -80,13 +84,13 @@ bot.command('start', async (ctx) => {
     }
 });
 
-// /logout command
-bot.command('logout', async (ctx) => {
+// /reset command
+bot.command('reset', async (ctx) => {
     // Delete the user's session from redis
     await redisClient.del(ctx.chat.id.toString())
         .then(() => {
             ctx.session = initial();
-            ctx.reply('You have been logged out successfully! Enter /start to restart the bot.');
+            ctx.reply('Your session has been cleared. Enter /start to start again.');
         })
         .catch((error) => {
             console.error(error);
@@ -97,7 +101,7 @@ bot.command('logout', async (ctx) => {
 // command menu
 bot.api.setMyCommands([
     {command: 'start', description: 'Start or restart the bot'},
-    {command: 'logout', description: 'Clear your session and log out'},
+    {command: 'reset', description: 'Clear your session data'},
 ]);
 
 // Middleware to handle user inputs
@@ -136,7 +140,7 @@ bot.on(['message:text', 'callback_query:data'], async (ctx) => {
             }
 
             await ctx.reply(
-                'Thanks for using Web3 Guardian! 😊\n\nEnter /start to try another user or /logout to logout.'
+                'Thanks for using Web3 Guardian! 😊\n\nEnter /start to try another user.'
             );
             ctx.session.state = State.IDLE;
         } else if (action === 'Submit Review') {
@@ -197,7 +201,7 @@ bot.on(['message:text', 'callback_query:data'], async (ctx) => {
         }
 
         await ctx.reply(
-            'Thanks for using Web3 Guardian! 😊\n\nEnter /start to try another user or /logout to logout.'
+            'Thanks for using Web3 Guardian! 😊\n\nEnter /start to try another user.'
         );
         ctx.session.state = State.IDLE;
     }
@@ -215,7 +219,7 @@ bot.start();
 
 // Start the server on port 3000
 app.listen(3000, () => {
-    console.log('Server is running on http://localhost:3000');
+    console.log('Server is running on port 3000');
 });
 
 // Render the connect-wallet page
@@ -245,6 +249,18 @@ app.post('/receive-signature', (req, res) => {
         .then(async () => {
             // reply to the user that the authentication was successful
             await bot.api.sendMessage(chatId, 'Wallet connected successfully!');
+
+            // Create an entity for the user if it doesn't exist
+            const username = await redisClient.hGet(chatId.toString(), 'myUsername') as string;
+            const uuid = await redisClient.hGet("entities", username);
+            if (!uuid) {
+                const entity = new Entity(username);
+                const resp = await addEntity(chatId, entity);
+                if (resp.status !== 200) {
+                    bot.api.sendMessage(chatId, 'Oops! That\'s on us. Please /start the bot again.');
+                    return;
+                }
+            }
 
             // Change the state of the bot to AWAITING_USERNAME
             redisClient.hSet(chatId, 'state', State.AWAITING_USERNAME)

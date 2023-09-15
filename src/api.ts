@@ -1,5 +1,5 @@
 // eslint-disable-next-line import/no-extraneous-dependencies
-import {IFeedbackData, IFeedbackResponse, IEntity, IAuthResponse, IAuthRequest} from './models';
+import {IFeedbackData, IFeedbackResponse, Entity, IAuthResponse, IAuthRequest} from './models';
 import qs from "qs";
 import {Urls} from './urls';
 import axios, {AxiosRequestConfig} from 'axios';
@@ -57,26 +57,20 @@ export async function getFeedbackSummary(userId: string, sourceUuid: string, tar
 
 /**
  * Add an entity to UTU.
- * @param userId the telegram userId of the user adding the entity
- * @param sourceUuid
- * @param targetUuid
- * @param transactionId
- * @param entityData
+ * @param userId the telegram userId of the user adding the entity (needed only for authentication)
+ * @param entity the entity to add
  * @returns a promise which will resolve with an unspecified value when the entity was added successfully, and will reject otherwise.
  */
-export async function addEntity(userId: string, sourceUuid: string, targetUuid: string, transactionId: string, entityData: IEntity): Promise<any> {
-    const sourceCriteria = createEntityCriteria(sourceUuid);
-    const targetCriteria = createEntityCriteria(targetUuid);
+export async function addEntity(userId: string, entity: Entity): Promise<any> {
     return axios.post(
         Urls.entity,
-        {
-            sourceCriteria,
-            targetCriteria,
-            transactionId,
-            items: entityData
-        },
+        entity,
         await withAuthHeader(userId)
-    );
+    ).then(result => {
+        // store in redis
+        redisClient.hSet("entities", entity.name, entity.ids.uuid);
+        return result;
+    })
 }
 
 function createEntityCriteria(uuid: string) {
