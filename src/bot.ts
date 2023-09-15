@@ -94,6 +94,12 @@ bot.command('logout', async (ctx) => {
         });
 });
 
+// command menu
+bot.api.setMyCommands([
+    {command: 'start', description: 'Start or restart the bot'},
+    {command: 'logout', description: 'Clear your session and log out'},
+]);
+
 // Middleware to handle user inputs
 bot.on(['message:text', 'callback_query:data'], async (ctx) => {
     if (ctx.session.state == State.AWAITING_USERNAME) {
