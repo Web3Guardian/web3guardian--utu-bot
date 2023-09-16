@@ -7,10 +7,10 @@ import {redisClient} from './redisClient';
 
 /**
  * Use the UTU API to post feedback.
- * @param userId the telegram userId of the user posting the feedback
- * @param sourceUuid
- * @param targetUuid
- * @param transactionId
+ * @param userId the telegram userId of the user posting the feedback (needed only for authentication)
+ * @param sourceUuid your entity's uuid
+ * @param targetUuid the uuid of the entity to post feedback for
+ * @param transactionId a unique identifier for the transaction. calling this function with an existing transactionId will overwrite the previous feedback.
  * @param feedbackData the feedback data to post
  * @return a promise which will resolve with an unspecified value when the feedback was posted successfully, and will reject otherwise.
  * @see IFeedbackData
@@ -59,6 +59,7 @@ export async function getFeedbackSummary(userId: string, sourceUuid: string, tar
  * Add an entity to UTU.
  * @param userId the telegram userId of the user adding the entity (needed only for authentication)
  * @param entity the entity to add
+ * @see Entity
  * @returns a promise which will resolve with an unspecified value when the entity was added successfully, and will reject otherwise.
  */
 export async function addEntity(userId: string, entity: Entity): Promise<any> {
@@ -77,11 +78,20 @@ function createEntityCriteria(uuid: string) {
     return {ids: {uuid}};
 }
 
+/**
+ * Obtain an access token from the UTU API and store it in Redis.
+ * @param userId the telegram userId of the user authenticating (for us to know who to store the access token for)
+ * @param payload the authorization details
+ * @see IAuthRequest
+ * @see IAuthResponse
+ * @returns a promise which will resolve with an unspecified value when the access token was obtained and stored successfully, and will reject otherwise.
+ */
 export async function getAndStoreAccessToken(userId: string, payload: IAuthRequest) {
     await axios.post<IAuthResponse>(Urls.auth, payload, {withCredentials: false,})
         .then(async result => {
             //store all fields of IAuthResponse in redis with userId as the key
             await redisClient.hSet(userId, {...result.data});
+            return result;
         });
 }
 

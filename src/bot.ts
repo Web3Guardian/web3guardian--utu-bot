@@ -108,6 +108,18 @@ bot.api.setMyCommands([
 bot.on(['message:text', 'callback_query:data'], async (ctx) => {
     if (ctx.session.state == State.AWAITING_USERNAME) {
         const username = ctx.message?.text || ctx.callbackQuery?.data;
+
+        // Create entity if it doesn't exist
+        const uuid = await redisClient.hGet("entities", username as string);
+        if (!uuid) {
+            const entity = new Entity(username as string);
+            const resp = await addEntity((ctx.chat!.id.toString()), entity);
+            if (resp.status !== 200) {
+                await bot.api.sendMessage(ctx.chat!.id, 'Something went wrong. Please try again.');
+                return;
+            }
+        }
+
         ctx.session.otherUsername = username as string;
         ctx.session.state = State.AWAITING_ACTION;
         await ctx.reply('What would you like to do?', {
