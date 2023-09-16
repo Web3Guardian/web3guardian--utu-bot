@@ -24,9 +24,9 @@ export class Entity {
     image: string;
     type: string;
 
-    constructor(name: string, image?: string) {
+    constructor(name: string, uuid?: string, image?: string) {
         this.name = name;
-        this.ids = {uuid: uuidv4()};
+        this.ids = {uuid: uuid || uuidv4()};
         this.image = image || `https://api.dicebear.com/7.x/adventurer/svg?seed=${this.ids.uuid}`;
         this.type = "telegram_user"
     }

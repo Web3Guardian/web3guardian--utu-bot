@@ -265,7 +265,7 @@ app.post('/receive-signature', (req, res) => {
             const username = await redisClient.hGet(chatId.toString(), 'myUsername') as string;
             const uuid = await redisClient.hGet("entities", username);
             if (!uuid) {
-                const entity = new Entity(username);
+                const entity = new Entity(username, checksummedAddress);
                 const resp = await addEntity(chatId, entity);
                 if (resp.status !== 200) {
                     bot.api.sendMessage(chatId, 'Oops! That\'s on us. Please /start the bot again.');
