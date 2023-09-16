@@ -106,13 +106,13 @@ bot.api.setMyCommands([
 
 // Middleware to handle user inputs
 bot.on(['message:text', 'callback_query:data'], async (ctx) => {
-    if (ctx.session.state == State.AWAITING_USERNAME) {
-        const username = ctx.message?.text || ctx.callbackQuery?.data;
+    if (ctx.session.state == State.AWAITING_USERNAME && ctx.message) {
+        const username = ctx.message.text;
 
         // Create entity if it doesn't exist
-        const uuid = await redisClient.hGet("entities", username as string);
+        const uuid = await redisClient.hGet("entities", username);
         if (!uuid) {
-            const entity = new Entity(username as string);
+            const entity = new Entity(username);
             const resp = await addEntity((ctx.chat!.id.toString()), entity);
             if (resp.status !== 200) {
                 await bot.api.sendMessage(ctx.chat!.id, 'Something went wrong. Please try again.');
@@ -120,7 +120,7 @@ bot.on(['message:text', 'callback_query:data'], async (ctx) => {
             }
         }
 
-        ctx.session.otherUsername = username as string;
+        ctx.session.otherUsername = username;
         ctx.session.state = State.AWAITING_ACTION;
         await ctx.reply('What would you like to do?', {
             reply_markup: new InlineKeyboard()
@@ -128,8 +128,8 @@ bot.on(['message:text', 'callback_query:data'], async (ctx) => {
                 .row()
                 .text('Submit Review on User 📝', 'Submit Review'),
         });
-    } else if (ctx.session.state == State.AWAITING_ACTION) {
-        const action = ctx.message?.text || ctx.callbackQuery?.data;
+    } else if (ctx.session.state == State.AWAITING_ACTION && ctx.callbackQuery) {
+        const action = ctx.callbackQuery.data;
         if (action === 'View User Reputation') {
             // TODO: Fetch feedback on entity (otherUsername) from UTU API
 
@@ -162,12 +162,12 @@ bot.on(['message:text', 'callback_query:data'], async (ctx) => {
             ctx.session.state = State.AWAITING_FEEDBACK;
         } else {
             await ctx.reply(
-                'Invalid input. Please enter View User Reputation or Submit Review'
+                'Invalid input. Please choose an option from the menu.'
             );
             return;
         }
-    } else if (ctx.session.state == State.AWAITING_FEEDBACK) {
-        ctx.session.feedback = ctx.message?.text! || ctx.callbackQuery?.data!;
+    } else if (ctx.session.state == State.AWAITING_FEEDBACK && ctx.message) {
+        ctx.session.feedback = ctx.message.text;
         await ctx.reply(`How would you rate your experience with @${ctx.session.otherUsername} ?`);
         ctx.session.state = State.AWAITING_RATING;
 
@@ -181,15 +181,15 @@ bot.on(['message:text', 'callback_query:data'], async (ctx) => {
                 .text('⭐⭐⭐⭐', '4')
                 .text('⭐⭐⭐⭐⭐', '5'),
         });
-    } else if (ctx.session.state == State.AWAITING_RATING) {
-        ctx.session.rating = (ctx.message?.text ||
-            ctx.callbackQuery?.data) as unknown as number; // Convert the star emoji into a rating value
-        if (ctx.session.rating < 1 || ctx.session.rating > 5) {
-            await ctx.reply('Invalid input. Please enter a number between 1 and 5');
+    } else if (ctx.session.state == State.AWAITING_RATING && ctx.callbackQuery) {
+        const rating = ctx.callbackQuery.data as unknown as number; // Convert the star emoji into a rating value
+        if (rating < 1 || rating > 5) {
+            await ctx.reply('Invalid input. Please choose an option from the menu.');
             return;
         }
         await ctx.reply('Feedback: ' + ctx.session.feedback);
         await ctx.reply('Rating: ' + ctx.session.rating);
+        ctx.session.rating = rating;
         ctx.session.state = State.AWAITING_FEEDBACK_CONFIRMATION;
 
         // Create a menu with yes/no options
@@ -199,16 +199,15 @@ bot.on(['message:text', 'callback_query:data'], async (ctx) => {
                 reply_markup: new InlineKeyboard().text('Yes', 'Yes').text('No', 'No'),
             }
         );
-    } else if (ctx.session.state == State.AWAITING_FEEDBACK_CONFIRMATION) {
-        const confirmation = ctx.message?.text || ctx.callbackQuery?.data;
+    } else if (ctx.session.state == State.AWAITING_FEEDBACK_CONFIRMATION && ctx.callbackQuery) {
+        const confirmation = ctx.callbackQuery.data;
         if (confirmation === 'Yes') {
-            // TODO: Create entity (whose uuid is in the format of an eth address) if it doesn't exist
             // TODO: Submit feedback on entity to UTU API
             await ctx.reply('Feedback submitted successfully!');
         } else if (confirmation === 'No') {
             await ctx.reply('Feedback submission cancelled.');
         } else {
-            await ctx.reply('Invalid input. Please enter Yes or No');
+            await ctx.reply('Invalid input. Please choose an option from the menu.');
             return;
         }
 
