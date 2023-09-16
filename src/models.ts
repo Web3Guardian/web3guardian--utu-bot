@@ -1,4 +1,4 @@
-import { v4 as uuidv4 } from 'uuid';
+import {ethers} from "ethers";
 
 export interface IAuthRequest {
     address: string;
@@ -26,7 +26,7 @@ export class Entity {
 
     constructor(name: string, uuid?: string, image?: string) {
         this.name = name;
-        this.ids = {uuid: uuid || uuidv4()};
+        this.ids = {uuid: uuid || ethers.id(name).slice(0, 40 + 2)};
         this.image = image || `https://api.dicebear.com/7.x/adventurer/svg?seed=${this.ids.uuid}`;
         this.type = "telegram_user"
     }
