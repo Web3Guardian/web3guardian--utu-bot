@@ -23,6 +23,7 @@ export class Entity {
     }
     image: string;
     type: string;
+    uuid?: string;
 
     constructor(name: string, uuid?: string, image?: string) {
         this.name = name;
@@ -52,7 +53,7 @@ export interface IFeedbackTarget {
     ids: [id: string]
 }
 
-/*for viewing feedback*/
+/** for viewing feedback */
 export interface IFeedback {
     summaryText: string;
     reviews: IReviews[];
@@ -72,4 +73,16 @@ export interface IStars {
     sum: number;
     name: [];
     summaryText: string;
+}
+
+export interface IRankingItem {
+    entity: Entity;
+    relationshipPaths: [];
+    summaryText: string;
+    summaryImages: string[];
+}
+
+export interface IRankingsResponse {
+    status: "success" | "error";
+    result: IRankingItem[];
 }

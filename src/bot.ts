@@ -2,9 +2,9 @@ import {Bot, Context, InlineKeyboard, session, SessionFlavor} from 'grammy';
 import {config} from 'dotenv';
 import express, {Request, Response} from 'express';
 import {ethers} from 'ethers';
-import {addEntity, getAndStoreAccessToken} from "./api";
+import {addEntity, getAndStoreAccessToken, getFeedbackSummary, getRanking, sendFeedback} from "./api";
 import {redisClient} from "./redisClient";
-import {Entity} from "./models";
+import {Entity, IFeedbackData} from "./models";
 
 const app = express();
 
@@ -131,30 +131,49 @@ bot.on(['message:text', 'callback_query:data'], async (ctx) => {
     } else if (ctx.session.state == State.AWAITING_ACTION && ctx.callbackQuery) {
         const action = ctx.callbackQuery.data;
         if (action === 'View User Reputation') {
-            // TODO: Fetch feedback on entity (otherUsername) from UTU API
+            const targetUuid = await redisClient.hGet("entities", ctx.session.otherUsername);
 
-            const reviews = [
-                'Review 1: Great user!',
-                'Review 2: Very trustworthy.',
-                'Review 3: Highly recommended.',
-            ];
+            if(targetUuid) {
+                // Get ranking (every other entity this has interacted with) from UTU API
+                getRanking(ctx.chat!.id.toString(), targetUuid)
+                    .then((ranking) => {
+                        if (ranking.length > 0) {
+                            console.log(ranking);
+                            ctx.reply(`Here are the reviews for @${ctx.session.otherUsername}:`);
 
-            // Display reviews to the user
-            if (reviews.length > 0) {
-                await ctx.reply(
-                    'Here are the reviews for @' + ctx.session.otherUsername + ':'
-                );
-                for (const review of reviews) {
-                    await ctx.reply(review);
-                }
+                            ranking
+                                .map((item) => item.entity)
+                                .forEach((source, idx) => {
+                                    // Get feedback that source has left on this entity from UTU API
+                                    getFeedbackSummary(ctx.chat!.id.toString(), source.uuid!, targetUuid)
+                                        .then((feedback) => {
+                                            if (feedback.result.items.reviews.length > 0)
+                                                ctx.reply(`@${source.name}:\n\n${feedback.result.items.reviews[0].content}\n\nRating: ${'⭐'.repeat(Math.round(feedback.result.items.stars.avg))}`);
+                                        })
+                                        .catch((error) => {
+                                            console.error(error);
+                                        });
+
+                                    // if last item, send message to user
+                                    if (idx === ranking.length - 1) {
+                                        ctx.reply('Thanks for using Web3 Guardian! 😊\n\nEnter /start to try another user.');
+                                        ctx.session.state = State.IDLE;
+                                    }
+                                });
+                        } else {
+                            ctx.reply(`No reviews found for @${ctx.session.otherUsername}\n\nEnter /start to try another user.`);
+                            ctx.session.state = State.IDLE;
+                        }
+                    })
+                    .catch((error) => {
+                        console.error(error);
+                        ctx.reply(`Unable to get feedback on @${ctx.session.otherUsername}\n\nEnter /start to try another user.`);
+                        ctx.session.state = State.IDLE;
+                    });
             } else {
-                await ctx.reply('No reviews found for @' + ctx.session.otherUsername);
+                ctx.reply(`Something went wrong. \n\nEnter /start to try again.`);
+                ctx.session.state = State.IDLE;
             }
-
-            await ctx.reply(
-                'Thanks for using Web3 Guardian! 😊\n\nEnter /start to try another user.'
-            );
-            ctx.session.state = State.IDLE;
         } else if (action === 'Submit Review') {
             await ctx.reply(
                 'Tell us your objective feedback on @' + ctx.session.otherUsername + ':'

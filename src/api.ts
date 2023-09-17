@@ -1,24 +1,32 @@
 // eslint-disable-next-line import/no-extraneous-dependencies
-import {IFeedbackData, IFeedbackResponse, Entity, IAuthResponse, IAuthRequest} from './models';
+import {
+    IFeedbackData,
+    IFeedbackResponse,
+    Entity,
+    IAuthResponse,
+    IAuthRequest,
+    IRankingsResponse,
+    IRankingItem
+} from './models';
 import qs from "qs";
 import {Urls} from './urls';
 import axios, {AxiosRequestConfig} from 'axios';
 import {redisClient} from './redisClient';
+import {v4 as uuidv4} from 'uuid';
 
 /**
  * Use the UTU API to post feedback.
  * @param userId the telegram userId of the user posting the feedback (needed only for authentication)
  * @param sourceUuid your entity's uuid
  * @param targetUuid the uuid of the entity to post feedback for
- * @param transactionId a unique identifier for the transaction. calling this function with an existing transactionId will overwrite the previous feedback.
  * @param feedbackData the feedback data to post
  * @return a promise which will resolve with an unspecified value when the feedback was posted successfully, and will reject otherwise.
  * @see IFeedbackData
  */
-export async function sendFeedback(userId: string, sourceUuid: string, targetUuid: string, transactionId: string, feedbackData: IFeedbackData): Promise<any> {
-    // TODO: where should we get the transactionId from?
+export async function sendFeedback(userId: string, sourceUuid: string, targetUuid: string, feedbackData: IFeedbackData): Promise<any> {
     const sourceCriteria = createEntityCriteria(sourceUuid);
     const targetCriteria = createEntityCriteria(targetUuid);
+    const transactionId = uuidv4();
     return axios.post(
         Urls.feedback,
         {
@@ -32,7 +40,29 @@ export async function sendFeedback(userId: string, sourceUuid: string, targetUui
 }
 
 /**
- * Get an entity's feedback summary from the UTU API.
+ * Get the rankings of every other entity this relates to from the UTU API.
+ * @param userId the telegram userId of the user getting the rankings (needed only for authentication)
+ * @param sourceUuid your entity's uuid
+ * @param targetType the type of the entities to get rankings for
+ * @return an array of ranking items
+ * @see IRankingItem
+ */
+export async function getRanking(userId: string, sourceUuid: string, targetType: string = "telegram_user"): Promise<IRankingItem[]> {
+    const sourceCriteria = createEntityCriteria(sourceUuid);
+    const queryParams = qs.stringify({
+        sourceCriteria,
+        targetType
+    });
+    return axios.get<IRankingsResponse>(
+        `${Urls.ranking}?${queryParams}`,
+        await withAuthHeader(userId)
+    ).then(result => {
+        return result.data.result;
+    });
+}
+
+/**
+ * Get source entity's feedback on target entity from the UTU API.
  * @param userId the telegram userId of the user getting the feedback
  * @param sourceUuid your entity's uuid
  * @param targetUuid the uuid of the entity to get feedback for
