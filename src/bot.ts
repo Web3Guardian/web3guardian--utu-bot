@@ -4,7 +4,7 @@ import express, {Request, Response} from 'express';
 import {ethers} from 'ethers';
 import {addEntity, getAndStoreAccessToken, getFeedbackSummary, getRanking, sendFeedback} from "./api";
 import {redisClient} from "./redisClient";
-import {Entity, IFeedbackData} from "./models";
+import {Entity, IFeedbackData, IFeedbackResponse} from "./models";
 
 const app = express();
 
@@ -136,34 +136,26 @@ bot.on(['message:text', 'callback_query:data'], async (ctx) => {
             if(targetUuid) {
                 // Get ranking (every other entity this has interacted with) from UTU API
                 getRanking(ctx.chat!.id.toString(), targetUuid)
-                    .then((ranking) => {
-                        if (ranking.length > 0) {
-                            console.log(ranking);
+                    .then(async (ranking) => {
+                        const promises = ranking
+                            .map((item) => getFeedbackSummary(ctx.chat!.id.toString(), item.entity.uuid!, targetUuid))
+
+                        const feedbacks = (await Promise.allSettled(promises))
+                            .filter((result) => result.status === 'fulfilled')  // filter out rejected promises
+                            .map((result) => (result as PromiseFulfilledResult<IFeedbackResponse>).value)
+                            .filter((feedback) => feedback.result.items.reviews.length > 0) // filter out feedback with no reviews
+
+                        if (feedbacks.length > 0) {
                             ctx.reply(`Here are the reviews for @${ctx.session.otherUsername}:`);
-
-                            ranking
-                                .map((item) => item.entity)
-                                .forEach((source, idx) => {
-                                    // Get feedback that source has left on this entity from UTU API
-                                    getFeedbackSummary(ctx.chat!.id.toString(), source.uuid!, targetUuid)
-                                        .then((feedback) => {
-                                            if (feedback.result.items.reviews.length > 0)
-                                                ctx.reply(`@${source.name}:\n\n${feedback.result.items.reviews[0].content}\n\nRating: ${'⭐'.repeat(Math.round(feedback.result.items.stars.avg))}`);
-                                        })
-                                        .catch((error) => {
-                                            console.error(error);
-                                        });
-
-                                    // if last item, send message to user
-                                    if (idx === ranking.length - 1) {
-                                        ctx.reply('Thanks for using Web3 Guardian! 😊\n\nEnter /start to try another user.');
-                                        ctx.session.state = State.IDLE;
-                                    }
-                                });
+                            feedbacks.forEach((feedback) => {
+                                ctx.reply(`${feedback.result.items.reviews[0].content}\n\nRating: ${'⭐'.repeat(Math.round(feedback.result.items.stars.avg))}`);
+                            });
                         } else {
-                            ctx.reply(`No reviews found for @${ctx.session.otherUsername}\n\nEnter /start to try another user.`);
-                            ctx.session.state = State.IDLE;
+                            ctx.reply(`No reviews found for @${ctx.session.otherUsername}.`);
                         }
+
+                        ctx.reply('Thanks for using Web3 Guardian! 😊\n\nEnter /start to try another user.');
+                        ctx.session.state = State.IDLE;
                     })
                     .catch((error) => {
                         console.error(error);

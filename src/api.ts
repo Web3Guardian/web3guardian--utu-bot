@@ -82,6 +82,9 @@ export async function getFeedbackSummary(userId: string, sourceUuid: string, tar
         await withAuthHeader(userId)
     ).then(result => {
         return result.data;
+    }).catch(err => {
+        console.log(err);
+        return err;
     })
 }
 
