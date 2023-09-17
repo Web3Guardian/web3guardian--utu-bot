@@ -124,6 +124,8 @@ export async function getAndStoreAccessToken(userId: string, payload: IAuthReque
         .then(async result => {
             //store all fields of IAuthResponse in redis with userId as the key
             await redisClient.hSet(userId, {...result.data});
+            //store the address and signature too (for refreshing the access token because the UTU API doesn't have a refresh token endpoint)
+            await redisClient.hSet(userId, {...payload});
             return result;
         });
 }

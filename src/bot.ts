@@ -107,20 +107,17 @@ bot.api.setMyCommands([
 // Middleware to handle user inputs
 bot.on(['message:text', 'callback_query:data'], async (ctx) => {
     if (ctx.session.state == State.AWAITING_USERNAME && ctx.message) {
-        const username = ctx.message.text;
+        const otherUsername = ctx.message.text;
 
-        // Create entity if it doesn't exist
-        const uuid = await redisClient.hGet("entities", username);
-        if (!uuid) {
-            const entity = new Entity(username);
-            const resp = await addEntity((ctx.chat!.id.toString()), entity);
-            if (resp.status !== 200) {
-                await bot.api.sendMessage(ctx.chat!.id, 'Something went wrong. Please try again.');
-                return;
-            }
+        // Create entity if it doesn't exist or update if exists
+        const entity = new Entity(otherUsername);
+        const resp = await addEntity((ctx.chat!.id.toString()), entity);
+        if (resp.status !== 200) {
+            await bot.api.sendMessage(ctx.chat!.id, 'Something went wrong. Please try again.');
+            return;
         }
 
-        ctx.session.otherUsername = username;
+        ctx.session.otherUsername = otherUsername;
         ctx.session.state = State.AWAITING_ACTION;
         await ctx.reply('What would you like to do?', {
             reply_markup: new InlineKeyboard()
@@ -131,40 +128,35 @@ bot.on(['message:text', 'callback_query:data'], async (ctx) => {
     } else if (ctx.session.state == State.AWAITING_ACTION && ctx.callbackQuery) {
         const action = ctx.callbackQuery.data;
         if (action === 'View User Reputation') {
-            const targetUuid = await redisClient.hGet("entities", ctx.session.otherUsername);
+            const targetUuid = new Entity(ctx.session.otherUsername).ids.uuid;  // this username will always return the same uuid because it is generated from the username
 
-            if(targetUuid) {
-                // Get ranking (every other entity this has interacted with) from UTU API
-                getRanking(ctx.chat!.id.toString(), targetUuid)
-                    .then(async (ranking) => {
-                        const promises = ranking
-                            .map((item) => getFeedbackSummary(ctx.chat!.id.toString(), item.entity.uuid!, targetUuid))
+            // Get ranking (every other entity this has interacted with) from UTU API
+            getRanking(ctx.chat!.id.toString(), targetUuid)
+                .then(async (ranking) => {
+                    const promises = ranking
+                        .map((item) => getFeedbackSummary(ctx.chat!.id.toString(), item.entity.uuid!, targetUuid))
 
-                        const feedbacks = (await Promise.allSettled(promises))
-                            .filter((result) => result.status === 'fulfilled')  // filter out rejected promises
-                            .map((result) => (result as PromiseFulfilledResult<IFeedbackResponse>).value)
-                            .filter((feedback) => feedback.result.items.reviews.length > 0) // filter out feedback with no reviews
+                    const feedbacks = (await Promise.allSettled(promises))
+                        .filter((result) => result.status === 'fulfilled')  // filter out rejected promises
+                        .map((result) => (result as PromiseFulfilledResult<IFeedbackResponse>).value)
+                        .filter((feedback) => feedback.result.items.reviews.length > 0) // filter out feedback with no reviews
 
-                        if (feedbacks.length > 0) {
-                            await ctx.reply(`Here are the reviews for @${ctx.session.otherUsername}:`);
-                            for (const feedback of feedbacks)
-                                await ctx.reply(`${feedback.result.items.reviews[0].content}\n\nRating: ${'⭐'.repeat(Math.round(feedback.result.items.stars.avg))}`);
-                        } else {
-                            await ctx.reply(`No reviews found for @${ctx.session.otherUsername}.`);
-                        }
-                    })
-                    .catch(async (error) => {
-                        console.error(error);
-                        await ctx.reply(`Unable to get feedback on @${ctx.session.otherUsername}.`);
-                    })
-                    .finally(async () => {
-                        await ctx.reply('Thanks for using Web3 Guardian! 😊\n\nEnter /start to try another user.');
-                        ctx.session.state = State.IDLE;
-                    })
-            } else {
-                await ctx.reply(`Something went wrong. \n\nEnter /start to try again.`);
-                ctx.session.state = State.IDLE;
-            }
+                    if (feedbacks.length > 0) {
+                        await ctx.reply(`Here are the reviews for @${ctx.session.otherUsername}:`);
+                        for (const feedback of feedbacks)
+                            await ctx.reply(`${feedback.result.items.reviews[0].content}\n\nRating: ${'⭐'.repeat(Math.round(feedback.result.items.stars.avg))}`);
+                    } else {
+                        await ctx.reply(`No reviews found for @${ctx.session.otherUsername}.`);
+                    }
+                })
+                .catch(async (error) => {
+                    console.error(error);
+                    await ctx.reply(`Unable to get feedback on @${ctx.session.otherUsername}.`);
+                })
+                .finally(async () => {
+                    await ctx.reply('Thanks for using Web3 Guardian! 😊\n\nEnter /start to try another user.');
+                    ctx.session.state = State.IDLE;
+                })
         } else if (action === 'Submit Review') {
             await ctx.reply(
                 'Tell us your objective feedback on @' + ctx.session.otherUsername + ':'
@@ -212,30 +204,24 @@ bot.on(['message:text', 'callback_query:data'], async (ctx) => {
     } else if (ctx.session.state == State.AWAITING_FEEDBACK_CONFIRMATION && ctx.callbackQuery) {
         const confirmation = ctx.callbackQuery.data;
         if (confirmation === 'Yes') {
-            const sourceUuid = await redisClient.hGet("entities", ctx.session.myUsername);
-            const targetUuid = await redisClient.hGet("entities", ctx.session.otherUsername);
-            if(sourceUuid && targetUuid) {
-                const feedback: IFeedbackData = {
-                    review: ctx.session.feedback,
-                    stars: Number(ctx.session.rating)   // Somehow the rating is a string here
-                }
-                sendFeedback(ctx.chat!.id.toString(), sourceUuid, targetUuid, feedback)
-                    .then(async () => {
-                        await ctx.reply('Feedback submitted successfully!');
-                    })
-                    .catch(async (error) => {
-                        console.error(error);
-                        await ctx.reply('Something went wrong. Please try again.');
-                    })
-                    .finally(async () => {
-                        await ctx.reply('Thanks for using Web3 Guardian! 😊\n\nEnter /start to try another user.');
-                        ctx.session.state = State.IDLE;
-                    });
-            } else {
-                await ctx.reply(`Something went wrong. Please try again.`);
-                await ctx.reply('Thanks for using Web3 Guardian! 😊\n\nEnter /start to try another user.');
-                ctx.session.state = State.IDLE;
+            const sourceUuid = await redisClient.hGet(ctx.chat!.id.toString(), "address") as string;    // my address
+            const targetUuid = new Entity(ctx.session.otherUsername).ids.uuid;
+            const feedback: IFeedbackData = {
+                review: ctx.session.feedback,
+                stars: Number(ctx.session.rating)   // Somehow the rating is a string here
             }
+            sendFeedback(ctx.chat!.id.toString(), sourceUuid, targetUuid, feedback)
+                .then(async () => {
+                    await ctx.reply('Feedback submitted successfully!');
+                })
+                .catch(async (error) => {
+                    console.error(error);
+                    await ctx.reply('Something went wrong. Please try again.');
+                })
+                .finally(async () => {
+                    await ctx.reply('Thanks for using Web3 Guardian! 😊\n\nEnter /start to try another user.');
+                    ctx.session.state = State.IDLE;
+                });
         } else if (confirmation === 'No') {
             await ctx.reply('Feedback submission cancelled.');
             await ctx.reply('Thanks for using Web3 Guardian! 😊\n\nEnter /start to try another user.');
@@ -290,16 +276,13 @@ app.post('/receive-signature', (req, res) => {
             // reply to the user that the authentication was successful
             await bot.api.sendMessage(chatId, 'Wallet connected successfully!');
 
-            // Create an entity for the user if it doesn't exist
+            // Create or update an entity for the user
             const username = await redisClient.hGet(chatId.toString(), 'myUsername') as string;
-            const uuid = await redisClient.hGet("entities", username);
-            if (!uuid) {
-                const entity = new Entity(username, checksummedAddress);
-                const resp = await addEntity(chatId, entity);
-                if (resp.status !== 200) {
-                    await bot.api.sendMessage(chatId, 'Oops! That\'s on us. Please /start the bot again.');
-                    return;
-                }
+            const entity = new Entity(username, checksummedAddress);
+            const resp = await addEntity(chatId, entity);
+            if (resp.status !== 200) {
+                await bot.api.sendMessage(chatId, 'Oops! That\'s on us. Please /start the bot again.');
+                return;
             }
 
             // Change the state of the bot to AWAITING_USERNAME
