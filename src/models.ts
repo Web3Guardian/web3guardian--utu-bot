@@ -35,8 +35,8 @@ export class Entity {
 
 /** for providing feedback */
 export interface IFeedbackData {
-    review?: string;
-    stars?: number;
+    review: string;
+    stars: number;
 }
 
 export interface IFeedbackResponse {

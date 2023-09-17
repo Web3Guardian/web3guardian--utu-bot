@@ -88,13 +88,13 @@ bot.command('start', async (ctx) => {
 bot.command('reset', async (ctx) => {
     // Delete the user's session from redis
     await redisClient.del(ctx.chat.id.toString())
-        .then(() => {
+        .then(async () => {
             ctx.session = initial();
-            ctx.reply('Your session has been cleared. Enter /start to start again.');
+            await ctx.reply('Your session has been cleared. Enter /start to start again.');
         })
-        .catch((error) => {
+        .catch(async (error) => {
             console.error(error);
-            ctx.reply('Something went wrong. Please try again.');
+            await ctx.reply('Something went wrong. Please try again.');
         });
 });
 
@@ -102,7 +102,7 @@ bot.command('reset', async (ctx) => {
 bot.api.setMyCommands([
     {command: 'start', description: 'Start or restart the bot'},
     {command: 'reset', description: 'Clear your session data'},
-]);
+]).then();
 
 // Middleware to handle user inputs
 bot.on(['message:text', 'callback_query:data'], async (ctx) => {
@@ -146,24 +146,23 @@ bot.on(['message:text', 'callback_query:data'], async (ctx) => {
                             .filter((feedback) => feedback.result.items.reviews.length > 0) // filter out feedback with no reviews
 
                         if (feedbacks.length > 0) {
-                            ctx.reply(`Here are the reviews for @${ctx.session.otherUsername}:`);
-                            feedbacks.forEach((feedback) => {
-                                ctx.reply(`${feedback.result.items.reviews[0].content}\n\nRating: ${'⭐'.repeat(Math.round(feedback.result.items.stars.avg))}`);
-                            });
+                            await ctx.reply(`Here are the reviews for @${ctx.session.otherUsername}:`);
+                            for (const feedback of feedbacks)
+                                await ctx.reply(`${feedback.result.items.reviews[0].content}\n\nRating: ${'⭐'.repeat(Math.round(feedback.result.items.stars.avg))}`);
                         } else {
-                            ctx.reply(`No reviews found for @${ctx.session.otherUsername}.`);
+                            await ctx.reply(`No reviews found for @${ctx.session.otherUsername}.`);
                         }
-
-                        ctx.reply('Thanks for using Web3 Guardian! 😊\n\nEnter /start to try another user.');
+                    })
+                    .catch(async (error) => {
+                        console.error(error);
+                        await ctx.reply(`Unable to get feedback on @${ctx.session.otherUsername}.`);
+                    })
+                    .finally(async () => {
+                        await ctx.reply('Thanks for using Web3 Guardian! 😊\n\nEnter /start to try another user.');
                         ctx.session.state = State.IDLE;
                     })
-                    .catch((error) => {
-                        console.error(error);
-                        ctx.reply(`Unable to get feedback on @${ctx.session.otherUsername}\n\nEnter /start to try another user.`);
-                        ctx.session.state = State.IDLE;
-                    });
             } else {
-                ctx.reply(`Something went wrong. \n\nEnter /start to try again.`);
+                await ctx.reply(`Something went wrong. \n\nEnter /start to try again.`);
                 ctx.session.state = State.IDLE;
             }
         } else if (action === 'Submit Review') {
@@ -198,9 +197,9 @@ bot.on(['message:text', 'callback_query:data'], async (ctx) => {
             await ctx.reply('Invalid input. Please choose an option from the menu.');
             return;
         }
+        ctx.session.rating = rating;
         await ctx.reply('Feedback: ' + ctx.session.feedback);
         await ctx.reply('Rating: ' + ctx.session.rating);
-        ctx.session.rating = rating;
         ctx.session.state = State.AWAITING_FEEDBACK_CONFIRMATION;
 
         // Create a menu with yes/no options
@@ -213,19 +212,37 @@ bot.on(['message:text', 'callback_query:data'], async (ctx) => {
     } else if (ctx.session.state == State.AWAITING_FEEDBACK_CONFIRMATION && ctx.callbackQuery) {
         const confirmation = ctx.callbackQuery.data;
         if (confirmation === 'Yes') {
-            // TODO: Submit feedback on entity to UTU API
-            await ctx.reply('Feedback submitted successfully!');
+            const sourceUuid = await redisClient.hGet("entities", ctx.session.myUsername);
+            const targetUuid = await redisClient.hGet("entities", ctx.session.otherUsername);
+            if(sourceUuid && targetUuid) {
+                const feedback: IFeedbackData = {
+                    review: ctx.session.feedback,
+                    stars: Number(ctx.session.rating)   // Somehow the rating is a string here
+                }
+                sendFeedback(ctx.chat!.id.toString(), sourceUuid, targetUuid, feedback)
+                    .then(async () => {
+                        await ctx.reply('Feedback submitted successfully!');
+                    })
+                    .catch(async (error) => {
+                        console.error(error);
+                        await ctx.reply('Something went wrong. Please try again.');
+                    })
+                    .finally(async () => {
+                        await ctx.reply('Thanks for using Web3 Guardian! 😊\n\nEnter /start to try another user.');
+                        ctx.session.state = State.IDLE;
+                    });
+            } else {
+                await ctx.reply(`Something went wrong. Please try again.`);
+                await ctx.reply('Thanks for using Web3 Guardian! 😊\n\nEnter /start to try another user.');
+                ctx.session.state = State.IDLE;
+            }
         } else if (confirmation === 'No') {
             await ctx.reply('Feedback submission cancelled.');
+            await ctx.reply('Thanks for using Web3 Guardian! 😊\n\nEnter /start to try another user.');
+            ctx.session.state = State.IDLE;
         } else {
             await ctx.reply('Invalid input. Please choose an option from the menu.');
-            return;
         }
-
-        await ctx.reply(
-            'Thanks for using Web3 Guardian! 😊\n\nEnter /start to try another user.'
-        );
-        ctx.session.state = State.IDLE;
     }
 });
 
@@ -235,8 +252,9 @@ bot.catch((err) => {
 });
 
 // Start the bot
-console.log('Starting bot...');
-bot.start();
+bot.start().then(() => {
+    console.log('Bot is running!');
+});
 
 
 // Start the server on port 3000
@@ -279,7 +297,7 @@ app.post('/receive-signature', (req, res) => {
                 const entity = new Entity(username, checksummedAddress);
                 const resp = await addEntity(chatId, entity);
                 if (resp.status !== 200) {
-                    bot.api.sendMessage(chatId, 'Oops! That\'s on us. Please /start the bot again.');
+                    await bot.api.sendMessage(chatId, 'Oops! That\'s on us. Please /start the bot again.');
                     return;
                 }
             }
@@ -294,9 +312,9 @@ app.post('/receive-signature', (req, res) => {
                     bot.api.sendMessage(chatId, 'Oops! That\'s on us. Please /start the bot again.');
                 });
         })
-        .catch((error) => {
+        .catch(async (error) => {
             // reply to the user that the authentication failed
-            bot.api.sendMessage(chatId, 'Wallet connection failed!');
+            await bot.api.sendMessage(chatId, 'Wallet connection failed!');
             console.error(error);
             res.status(500).json({error});
         });
