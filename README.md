@@ -38,7 +38,7 @@ To use the UTU Web3Guardian Telegram Bot, follow these steps:
 5. Based on your choice in step 4 above:-
     - _The first option returns the reviews given by other users' and your as well_.
     - _Write down feedback for a user and give them a rating on a scale of 1-5 if you choose the 2nd option_.
-6. Confirm your choice and reset the bot to start another session.
+6. Confirm your choice and click ```/reset``` the bot to start another session.
 
 ## Local Installation and Contribution Guidelines
 ### Prerequisites
