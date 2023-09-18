@@ -66,7 +66,7 @@ git clone git@github.com:DennohKim/web3guardian--utu-bot.git
 cd web3guardian--utu-bot
 ```
 
-3. Create your own `.env` file using the template provided after acquiring your specific bot token. Guidance on how to generate your bot token can be found [HERE](https://medium.com/geekculture/generate-telegram-token-for-bot-api-d26faf9bf064). The redis host is `redis` and the port is `6379`. 
+3. Create your own `.env` file using the template provided after acquiring your specific bot token. Guidance on how to generate your bot token can be found [HERE](https://medium.com/geekculture/generate-telegram-token-for-bot-api-d26faf9bf064). The redis host is `redis` and the port is `6379`. The base_url is `http://localhost:3000` in a development setup.
 
 4. Build and start the docker containers by running the command
  ```bash 
