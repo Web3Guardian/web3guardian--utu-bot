@@ -20,24 +20,34 @@ The bot allows users to securely give and receive feedback on Decentralized Appl
 ## Problem Statement
 The online space has been murred with malicious actors and spam, specifically on telegram. By using our UTU Web3Guardian bot, you will be able to idenfity bad actors and therefore protect yourself from fraudulent activities such as:
     - Revealing your PII (Personally Identifiable Informtion) to malicious groups.
+    
     - Loosing funds to scammers and grifters.
 
 ## Key Features
 - **Submit Feedback:** Write reviews for a user and provide them a  rating based on the provided context.
+
 - **View Reputation:** Check out a user's reputation (feedback and rating) given by other users and entities that interacted with the bot before.
+
 - **User Verification:** Ascertain that user owns a telegram account.
+
 - **Decentralized Storage:** Create,store, and manage reviews and feedback in UTU's backend using the provided API endpoints for user entities and their relationships.
+
 - **Wallet Integration:**  A web3 wallet connector, and sign a verfication message to be able to interact with the _Web3Guadian_ Telegram bot.
 
 ## Usage
 To use the UTU Web3Guardian Telegram Bot, follow these steps:
 1. Navigate to your web browser of choice and click this [link](https://t.me/web3guardian_utu_bot) to redirect you to the UTU's web3guardian telegram bot.
+
 2. Click ```/start``` and connect your web3 wallet extension of choice (e.g Metamask)
+
 3. Enter a username whose review or feedback you want to view or give.
+
 4. Choose whether you want to **View a User's Reputation** or **Submit a Review on a User**.
+
 5. Based on your choice in step 4 above:-
     - _The first option returns the reviews given by other users' and your as well_.
     - _Write down feedback for a user and give them a rating on a scale of 1-5 if you choose the 2nd option_.
+
 6. Confirm your choice and click ```/reset``` the bot to start another session.
 
 ## Local Installation and Contribution Guidelines
