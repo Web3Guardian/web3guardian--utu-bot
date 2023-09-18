@@ -1,5 +1,17 @@
 # Project Title: UTU Protocol Web3Guardian Telegram Bot
 
+## Table of Contents
+
+- [Description](#Description)
+- [Problem Statement](#ProblemStatement)
+- [Key Features](#KeyFeatures)
+- [Usage](#Usage)
+- [Local Installation and Contribution Guidelines](#LocalInstallationandCotributionGuidelines)
+- [Demo Video  & ScreenShots(WIP)](#DemoVideo&ScreenShots(WIP))
+- [License](#License)
+- [Contact](#contact)
+
+
 ## Description
 The Web3Guardian Telegram bot is a powerful and user-friendly bot that leverages **UTU** protocol's trust engine to enhance trustworthiness in digital interactions on the internet.
 
@@ -9,7 +21,7 @@ The bot allows users to securely give and receive feedback on Decentralized Appl
 The online space has been murred with malicious actors and spam, specifically on telegram. By using our UTU Web3Guardian bot, you will be able to idenfity bad actors and therefore protect yourself from fraudulent activies such as:
     - Revealing your PII (Personally Identifiable Informtion) to malicious groups.
     - Loosing funds to scammers and grifters.
-    
+
 ## Key Features
 - **Submit Feedback:** Write reviews for a user and provide them a  rating based on the provided context.
 - **View Reputation:** Check out a user's reputation (feedback and rating) given by other users and entities that interacted with the bot before.
@@ -28,7 +40,7 @@ To use the UTU Web3Guardian Telegram Bot, follow these steps:
     - _Write down feedback for a user and give them a rating on a scale of 1-5 if you choose the 2nd option_.
 6. Confirm your choice and reset the bot to start another session.
 
-## Installation
+## Local Installation and Contribution Guidelines
 ### Prerequisites
 - A publicly accessible environment (either a cloud server or a local machine exposed to the internet)
 - [Git](https://git-scm.com/downloads)
@@ -40,7 +52,7 @@ or if you like pain:
 - [redis](https://redis.io/download)
 - [ngrok]()
 
-### Local Installation and Contribution Guidelines
+### Installation
 
 1. Clone the project's github repository from the link `git@github.com:LeviScoffie/web3guardian--utu-bot.git`.
 
