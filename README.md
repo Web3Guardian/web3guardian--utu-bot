@@ -18,7 +18,7 @@ The Web3Guardian Telegram bot is a powerful and user-friendly bot that leverages
 The bot allows users to securely give and receive feedback on Decentralized Applications (dApps) and their users on Telegram hence strengthening their reputation.
 
 ## Problem Statement
-The online space has been murred with malicious actors and spam, specifically on telegram. By using our UTU Web3Guardian bot, you will be able to idenfity bad actors and therefore protect yourself from fraudulent activies such as:
+The online space has been murred with malicious actors and spam, specifically on telegram. By using our UTU Web3Guardian bot, you will be able to idenfity bad actors and therefore protect yourself from fraudulent activities such as:
     - Revealing your PII (Personally Identifiable Informtion) to malicious groups.
     - Loosing funds to scammers and grifters.
 
@@ -50,25 +50,35 @@ or if you like pain:
 - [npm](https://www.npmjs.com/get-npm)
 - [Node.js](https://nodejs.org/en/download/)
 - [redis](https://redis.io/download)
-- [ngrok]()
+
 
 ### Installation
 
-1. Clone the project's github repository. ```bash
+1. Clone the project's github repository. 
+```bash
 git clone git@github.com:DennohKim/web3guardian--utu-bot.git
+```
 
-2. Run ```bash
-npm install 
+2. Run 
+```bash
+npm install
+```
 To install all the project's dependencies on your package.json file.
 3. Create your own `.env` file using the template provided after acquiring your specific bot token. Guidance on how to generate your bot token can be found [HERE](https://medium.com/geekculture/generate-telegram-token-for-bot-api-d26faf9bf064). You can visit the [redis](https://redis.io/docs/ui/cli/#:~:text=Host%2C%20port%2C%20password%2C%20and,%2C%20use%20the%20%2Dh%20option.) documentation to get redis port number and host. 
 
-3. One the terminal, navigate to the project's root directory and spin up the docker containers by running the command ```bash 
-docker compose up.
+3. One the terminal, navigate to the project's root directory and spin up the docker containers by running the command
+ ```bash 
+docker compose up
+```
 
-4. Navigate to another terminal and expose the container's port _3000_ using the command ```bash 
+4. Navigate to another terminal and expose the container's port _3000_ using the command 
+```bash 
 ngrok http 3000
- Ps. you will have to install **ngrok** using ```bash 
- sudo snap install ngrok.
+```
+- Ps. you will have to install **ngrok** using 
+ ```bash 
+ sudo snap install ngrok
+ ```
 
 5. Once everything is up and running, you can follow the steps outlaid on the [**Usage**](#Usage) section above to interact with the Telegram bot.
 
