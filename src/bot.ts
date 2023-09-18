@@ -295,6 +295,8 @@ app.post('/receive-signature', (req, res) => {
                     console.error(error);
                     bot.api.sendMessage(chatId, 'Oops! That\'s on us. Please /start the bot again.');
                 });
+
+            res.status(200).json({message: 'success'});
         })
         .catch(async (error) => {
             // reply to the user that the authentication failed
@@ -302,6 +304,4 @@ app.post('/receive-signature', (req, res) => {
             console.error(error);
             res.status(500).json({error});
         });
-
-    res.json({status: 200});
 });
