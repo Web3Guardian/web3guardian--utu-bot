@@ -59,11 +59,11 @@ or if you like pain:
 git clone git@github.com:DennohKim/web3guardian--utu-bot.git
 ```
 
-2. Run 
+2. To install all the project's dependencies on your package.json file, run:
 ```bash
 npm install
 ```
-To install all the project's dependencies on your package.json file.
+
 
 3. Create your own `.env` file using the template provided after acquiring your specific bot token. Guidance on how to generate your bot token can be found [HERE](https://medium.com/geekculture/generate-telegram-token-for-bot-api-d26faf9bf064). You can visit the [redis](https://redis.io/docs/ui/cli/#:~:text=Host%2C%20port%2C%20password%2C%20and,%2C%20use%20the%20%2Dh%20option.) documentation to get redis port number and host. 
 
