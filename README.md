@@ -13,7 +13,7 @@
 
 
 ## Description
-Web3Guardian is a powerful and user-friendly bot that leverages the **UTU** protocol's trust engine to enhance trustworthiness in online digital interactions.
+Web3Guardian is a powerful and user-friendly telegram bot that leverages the **UTU** protocol's trust engine to enhance trustworthiness in online digital interactions.
 
 The bot allows users to securely give and receive feedback from other users on Telegram, strengthening their reputation.
 
