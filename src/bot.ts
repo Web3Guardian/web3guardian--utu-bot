@@ -56,7 +56,8 @@ const storage = {
         return (await redisClient.hGetAll(key)) as unknown as SessionData;
     },
     write: async (key: string, value: SessionData) => {
-        await redisClient.hSet(key, {...value});
+        if (value)
+            await redisClient.hSet(key, {...value});
     },
     delete: async (key: string) => {
         await redisClient.del(key);
