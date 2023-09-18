@@ -54,13 +54,21 @@ or if you like pain:
 
 ### Installation
 
-1. Clone the project's github repository from the link ```base git clone git@github.com:DennohKim/web3guardian--utu-bot.git```.
+1. Clone the project's github repository. ```bash
+git clone git@github.com:DennohKim/web3guardian--utu-bot.git
 
-2. Create your own `.env` file using the template provided after acquiring your specific bot token. Guidance on how to generate your bot token can be found [HERE](https://medium.com/geekculture/generate-telegram-token-for-bot-api-d26faf9bf064). You can visit the [redis](https://redis.io/docs/ui/cli/#:~:text=Host%2C%20port%2C%20password%2C%20and,%2C%20use%20the%20%2Dh%20option.) documentation to get redis port number and host. 
+2. Run ```bash
+npm install 
+To install all the project's dependencies on your package.json file.
+3. Create your own `.env` file using the template provided after acquiring your specific bot token. Guidance on how to generate your bot token can be found [HERE](https://medium.com/geekculture/generate-telegram-token-for-bot-api-d26faf9bf064). You can visit the [redis](https://redis.io/docs/ui/cli/#:~:text=Host%2C%20port%2C%20password%2C%20and,%2C%20use%20the%20%2Dh%20option.) documentation to get redis port number and host. 
 
-3. One the terminal, navigate to the project's root directory and spin up the docker containers by running the command ```docker compose up```.
+3. One the terminal, navigate to the project's root directory and spin up the docker containers by running the command ```bash 
+docker compose up.
 
-4. Navigate to another terminal and expose the container's port _3000_ using the command ```ngrok http 3000```. Ps. you will have to install **ngrok** using ```sudo snap install ngrok```.
+4. Navigate to another terminal and expose the container's port _3000_ using the command ```bash 
+ngrok http 3000
+ Ps. you will have to install **ngrok** using ```bash 
+ sudo snap install ngrok.
 
 5. Once everything is up and running, you can follow the steps outlaid on the [**Usage**](#Usage) section above to interact with the Telegram bot.
 
