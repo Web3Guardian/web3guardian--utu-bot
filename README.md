@@ -62,7 +62,7 @@ To use the UTU Web3Guardian Telegram Bot, follow these steps:
 - [Git](https://git-scm.com/downloads)
 - [Docker](https://docs.docker.com/install/)
 - [Ethers](https://docs.ethers.org/v5/getting-started/)
-  -or if you like pain:
+  - or if you like pain:
 - [npm](https://www.npmjs.com/get-npm)
 - [Node.js](https://nodejs.org/en/download/)
 - [redis](https://redis.io/download)
