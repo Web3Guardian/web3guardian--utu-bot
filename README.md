@@ -19,9 +19,9 @@ The bot allows users to securely give and receive feedback on Decentralized Appl
 
 ## Problem Statement
 The online space has been murred with malicious actors and spam, specifically on telegram. By using our UTU Web3Guardian bot, you will be able to idenfity bad actors and therefore protect yourself from fraudulent activities such as:
-    - Revealing your PII (Personally Identifiable Informtion) to malicious groups.
-    
-    - Loosing funds to scammers and grifters.
+- Revealing your PII (Personally Identifiable Informtion) to malicious groups.
+
+- Loosing funds to scammers and grifters.
 
 ## Key Features
 - **Submit Feedback:** Write reviews for a user and provide them a  rating based on the provided context.
