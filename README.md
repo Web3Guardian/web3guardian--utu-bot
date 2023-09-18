@@ -102,4 +102,4 @@ ngrok http 3000
 ## License
 The **UTU** Web3Guardian Telegram Bot is open-source software licensed under the [MIT License](https://github.com/git/git-scm.com/blob/main/MIT-LICENSE.txt)
 ## Contact
-For questions, suggestions, or support, please contact our team at contact@email.com or 
+For questions, suggestions, or support, please contact our team [HERE](https://github.com/DennohKim).
