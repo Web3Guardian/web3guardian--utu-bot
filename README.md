@@ -1,7 +1,7 @@
 # Project Title: UTU Protocol Web3Guardian Telegram Bot
 
 ## Table of Contents
-
+- [Team Members](#TeamMembers)
 - [Description](#Description)
 - [Problem Statement](#ProblemStatement)
 - [Key Features](#KeyFeatures)
@@ -11,7 +11,13 @@
 - [License](#License)
 - [Contact](#contact)
 
-
+## Team Members
+This is a project submission for the [ETHSafari](https://taikai.network/ethsafari/hackathons/ethsafari) Bootckathon competition. The project was executed by a team of 5 namely:
+- [DennoKim](https://github.com/DennohKim) - Team Lead
+- [Badass Techie](badass-techie)
+- Hawa 
+- Hazard Cryptos
+- [Scoffie](https://github.com/LeviScoffie)
 ## Description
 The Web3Guardian Telegram bot is a powerful and user-friendly bot that leverages **UTU** protocol's trust engine to enhance trustworthiness in digital interactions on the internet.
 
@@ -57,6 +63,7 @@ To use the UTU Web3Guardian Telegram Bot, follow these steps:
 and either:
 - [Docker](https://docs.docker.com/install/)
 or if you like pain:
+- [Ethers](https://docs.ethers.org/v5/getting-started/)
 - [npm](https://www.npmjs.com/get-npm)
 - [Node.js](https://nodejs.org/en/download/)
 - [redis](https://redis.io/download)
