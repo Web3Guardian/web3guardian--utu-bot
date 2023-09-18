@@ -15,28 +15,26 @@
 ## Description
 The Web3Guardian Telegram bot is a powerful and user-friendly bot that leverages **UTU** protocol's trust engine to enhance trustworthiness in digital interactions on the internet.
 
-The bot allows users to securely give and receive feedback on Decentralized Applications (dApps) and their users on Telegram hence strengthening their reputation.
+The bot allows users to securely give and receive feedback on other users on Telegram hence strengthening their reputation.
 
 ## Problem Statement
-The online space has been murred with malicious actors and spam, specifically on telegram. By using our UTU Web3Guardian bot, you will be able to idenfity bad actors and therefore protect yourself from fraudulent activities such as:
-- Revealing your PII (Personally Identifiable Informtion) to malicious groups.
+The online space has been marred with malicious actors and spam, specifically on telegram. By using our UTU Web3Guardian bot, you will be able to identify bad actors and therefore protect yourself from fraudulent activities such as:
+- Revealing your PII (Personally Identifiable Information) to malicious groups.
 
-- Loosing funds to scammers and grifters.
+- Losing funds to scammers and grifters.
 
 ## Key Features
 - **Submit Feedback:** Write reviews for a user and provide them a  rating based on the provided context.
 
 - **View Reputation:** Check out a user's reputation (feedback and rating) given by other users and entities that interacted with the bot before.
 
-- **User Verification:** Ascertain that user owns a telegram account.
-
-- **Decentralized Storage:** Create,store, and manage reviews and feedback in UTU's backend using the provided API endpoints for user entities and their relationships.
+- **Decentralized Storage:** Create, store, and manage reviews and feedback in UTU's decentralized protocol.
 
 - **Wallet Integration:**  A web3 wallet connector, and sign a verfication message to be able to interact with the _Web3Guadian_ Telegram bot.
 
 ## Usage
 To use the UTU Web3Guardian Telegram Bot, follow these steps:
-1. Navigate to your web browser of choice and click this [link](https://t.me/web3guardian_utu_bot) to redirect you to the UTU's web3guardian telegram bot.
+1. Navigate to your web browser of choice and click this [link](https://t.me/web3guardian_utu_bot) to redirect you to Web3Guardian (UTU) telegram bot.
 
 2. Click ```/start``` and connect your web3 wallet extension of choice (e.g Metamask)
 
@@ -48,7 +46,7 @@ To use the UTU Web3Guardian Telegram Bot, follow these steps:
     - _The first option returns the reviews given by other users' and your as well_.
     - _Write down feedback for a user and give them a rating on a scale of 1-5 if you choose the 2nd option_.
 
-6. Confirm your choice and click ```/reset``` the bot to start another session.
+6. Confirm your choice and click ```/start``` to start another session or ```/reset``` to reset the bot.
 
 ## Local Installation and Contribution Guidelines
 ### Prerequisites
