@@ -1,7 +1,7 @@
 # Project Title: UTU Protocol Web3Guardian Telegram Bot
 
 ## Table of Contents
-
+- [Team Members](#TeamMembers)
 - [Description](#Description)
 - [Problem Statement](#ProblemStatement)
 - [Key Features](#KeyFeatures)
@@ -10,6 +10,14 @@
 - [Demo Video  & ScreenShots(WIP)](#DemoVideo&ScreenShots(WIP))
 - [License](#License)
 - [Contact](#contact)
+
+## Team Members
+This is a project submission for the [ETHSafari](https://taikai.network/ethsafari/hackathons/ethsafari) Bootckathon competition. The project was executed by a team of 5 namely:
+- [DennoKim](https://github.com/DennohKim) - Team Leader
+- [Badass Techie](badass-techie)
+- Hawa 
+- Hazard Cryptos
+- [Scoffie](https://github.com/LeviScoffie)
 
 
 ## Description
