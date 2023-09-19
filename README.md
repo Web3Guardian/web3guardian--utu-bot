@@ -1,7 +1,12 @@
 # Project Title: UTU Protocol Web3Guardian Telegram Bot
 
+## Screenshot
+ ![image](./web3guardian-utu-bot.jpeg)
+
+## Demo Video
+
 ## Table of Contents
-- [Team Members](#TeamMembers)
+- [Team Members](#Team Members)
 - [Description](#Description)
 - [Problem Statement](#ProblemStatement)
 - [Key Features](#KeyFeatures)
@@ -18,7 +23,6 @@ This is a project submission for the [ETHSafari](https://taikai.network/ethsafar
 - Hawa Maria
 - Hazard Krypto ([@iBrainiac](https://github.com/iBrainiac))
 - [Scoffie](https://github.com/LeviScoffie)
-
 
 ## Description
 Web3Guardian is a powerful and user-friendly telegram bot that leverages the **UTU** protocol's trust engine to enhance trustworthiness in online digital interactions.
@@ -95,7 +99,10 @@ This is so that the telegram bot can be able to send requests to your localhost
 
 6. Once everything is up and running, you can follow the steps outlined in the [**Usage**](#Usage) section above to interact with the Telegram bot.
 
+<<<<<<< HEAD
 ## Demo Video  & ScreenShots(WIP)
+=======
+>>>>>>> main
 
 ## License
 The **UTU** Web3Guardian Telegram Bot is open-source software licensed under the [MIT License](https://github.com/git/git-scm.com/blob/main/MIT-LICENSE.txt)
