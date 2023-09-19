@@ -1,7 +1,7 @@
 # Project Title: UTU Protocol Web3Guardian Telegram Bot
 
 ## Table of Contents
-- [Team Members](#Team Members)
+- [Team Members](#TeamMembers)
 - [Description](#Description)
 - [Problem Statement](#ProblemStatement)
 - [Key Features](#KeyFeatures)
