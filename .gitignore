@@ -3,3 +3,4 @@
 ngrok.exe
 dist
 node_modules
+*.log
