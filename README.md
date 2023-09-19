@@ -1,4 +1,6 @@
-# Project Title: UTU Protocol Web3Guardian Telegram Bot
+# Project Title:  Web3Guardian (UTU Protocol)
+
+A telegram bot that leverages the UTU Web3 Protocol to provide reputation checks on telegram users
 
 ## Screenshot
  ![image](./web3guardian-utu-bot.jpeg)
@@ -6,13 +8,12 @@
 ## Demo Video
 
 ## Table of Contents
-- [Team Members](#Team Members)
+- [Team Members](#Team-Members)
 - [Description](#Description)
-- [Problem Statement](#ProblemStatement)
-- [Key Features](#KeyFeatures)
+- [Problem Statement](#Problem-Statement)
+- [Key Features](#Key-Features)
 - [Usage](#Usage)
-- [Local Installation and Contribution Guidelines](#LocalInstallationandCotributionGuidelines)
-- [Demo Video  & ScreenShots(WIP)](#DemoVideo&ScreenShots(WIP))
+- [Local Installation and Contribution Guidelines](#Local-Installation-and-Contribution-Guidelines)
 - [License](#License)
 - [Contact](#contact)
 
@@ -98,11 +99,6 @@ This is so that the telegram bot can be able to send requests to your localhost
  ```
 
 6. Once everything is up and running, you can follow the steps outlined in the [**Usage**](#Usage) section above to interact with the Telegram bot.
-
-<<<<<<< HEAD
-## Demo Video  & ScreenShots(WIP)
-=======
->>>>>>> main
 
 ## License
 The **UTU** Web3Guardian Telegram Bot is open-source software licensed under the [MIT License](https://github.com/git/git-scm.com/blob/main/MIT-LICENSE.txt)
