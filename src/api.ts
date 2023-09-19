@@ -13,6 +13,8 @@ import {Urls} from './urls';
 import axios, {AxiosRequestConfig} from 'axios';
 import {redisClient} from './redisClient';
 import {v4 as uuidv4} from 'uuid';
+import {Contract, JsonRpcProvider, Transaction} from "ethers";
+import { abi as UTTAbi } from "./../contracts/UTT.abi.json";
 
 /**
  * Use the UTU API to post feedback.
@@ -105,6 +107,30 @@ export async function addEntity(userId: string, entity: Entity): Promise<any> {
         redisClient.hSet("entities", entity.name, entity.ids.uuid);
         return result;
     })
+}
+
+/**
+ * Creates an endorsement transaction
+ * @param sourceAddress the address of the endorser
+ * @param targetAddress the target address of the endorsement
+ * @param amount the amount of UTT to stake on the endorsement
+ * @param transactionId the business transaction id (might or might not be an Ethereum tx id) to record with the
+ *      endorsement, if any
+ */
+export async function endorse(sourceAddress: string, targetAddress: string, amount: string, transactionId: string): Promise<Transaction> {
+    const provider = new JsonRpcProvider(Urls.networkUrl);
+    const contract = new Contract(Urls.uttContractAddress, UTTAbi, provider);
+    const utuBalance = await contract.balanceOf(targetAddress);
+    if (Number(utuBalance) < Number(amount)) {
+        throw new Error("Insufficient UTU tokens");
+    }
+    const transaction = await contract.endorse(
+        targetAddress,
+        String(amount),
+        transactionId
+    );
+    await transaction.wait();
+    return transaction;
 }
 
 function createEntityCriteria(uuid: string) {
