@@ -143,7 +143,11 @@ bot.on(['message:text', 'callback_query:data'], async (ctx) => {
                         .filter((feedback) => feedback.result.items.reviews.length > 0) // filter out feedback with no reviews
 
                     if (feedbacks.length > 0) {
-                        await ctx.reply(`Here are the reviews for @${ctx.session.otherUsername}:`);
+                        // calculate the average rating
+                        const avgRating = feedbacks
+                            .map((feedback) => feedback.result.items.stars.avg)
+                            .reduce((a, b) => a + b) / feedbacks.length;
+                        await ctx.reply(`Average Rating: ${avgRating}/5\n\nHere are the reviews for @${ctx.session.otherUsername}:`);
                         for (const feedback of feedbacks)
                             await ctx.reply(`${feedback.result.items.reviews[0].content}\n\nRating: ${'⭐'.repeat(Math.round(feedback.result.items.stars.avg))}`);
                     } else {
