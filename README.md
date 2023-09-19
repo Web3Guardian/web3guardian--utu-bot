@@ -1,7 +1,7 @@
 # Project Title: UTU Protocol Web3Guardian Telegram Bot
 
 ## Table of Contents
-- [Team Members](#TeamMembers)
+- [Team Members](#Team Members)
 - [Description](#Description)
 - [Problem Statement](#ProblemStatement)
 - [Key Features](#KeyFeatures)
@@ -13,10 +13,10 @@
 
 ## Team Members
 This is a project submission for the [ETHSafari](https://taikai.network/ethsafari/hackathons/ethsafari) Bootckathon competition. The project was executed by a team of 5 namely:
-- [DennoKim](https://github.com/DennohKim) - Team Leader
-- [Badass Techie](badass-techie)
-- Hawa 
-- Hazard Cryptos
+- Dennis Kimathi ([@DennohKim](https://github.com/DennohKim)) - Team Leader
+- Moses Odhiambo ([@badass-techie](https://github.com/badass-techie)) - Full Stack Developer
+- Hawa Maria
+- Hazard Krypto ([@iBrainiac](https://github.com/iBrainiac))
 - [Scoffie](https://github.com/LeviScoffie)
 
 
@@ -61,13 +61,10 @@ To use the UTU Web3Guardian Telegram Bot, follow these steps:
 - A publicly accessible environment (either a cloud server or a local machine exposed to the internet)
 - [Git](https://git-scm.com/downloads)
 - [Docker](https://docs.docker.com/install/)
-- [Ethers](https://docs.ethers.org/v5/getting-started/)
-  - or if you like pain:
-- [npm](https://www.npmjs.com/get-npm)
-- [Node.js](https://nodejs.org/en/download/)
-- [redis](https://redis.io/download)
 
 ### Installation
+
+Assuming you are in a development setup:
 
 1. Clone the project's github repository. 
 ```bash
@@ -86,10 +83,11 @@ cd web3guardian--utu-bot
 docker compose up
 ```
 
-5. Navigate to another terminal and expose the container's port _3000_ using the command 
+5. Navigate to another terminal and expose the your localhost to the internet using ngrok by running the command
 ```bash 
 ngrok http 3000
 ```
+This is so that the telegram bot can be able to send requests to your localhost
 - Ps. You will have to install **ngrok** using 
  ```bash 
  sudo snap install ngrok
